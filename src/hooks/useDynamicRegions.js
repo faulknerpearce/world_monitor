@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { HOTSPOTS, INTEL_HOTSPOTS, US_HOTSPOTS, CONFLICT_ZONES } from '@config/regions.js'
-import { NEWS_FEEDS } from '@services/feeds_dashboard'
+import { NEWS_FEEDS } from '@services/feeds'
 import { fetchWithProxy, parseRSS } from '@utils/fetchUtils.js'
 
 /**

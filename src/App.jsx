@@ -5,10 +5,9 @@ import Dashboard from '@components/Dashboard/Dashboard'
 import GlobalMap from '@components/GlobalMap/GlobalMap'
 import SettingsModal from '@components/SettingsModal/SettingsModal'
 import CommandModal from '@components/CommandModal/CommandModal'
-import { usePanelSettings } from '@services/usePanelSettings'
+import { usePanelSettings } from '@hooks/usePanelSettings'
+import { ThemeProvider } from '@context/ThemeContext'
 import './App.css'
-
-import { ThemeProvider } from './context/ThemeContext'
 
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)

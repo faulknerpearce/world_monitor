@@ -43,14 +43,21 @@ Open [http://localhost:3000](http://localhost:3000) (or the port shown in the te
 ```
 src/
 ├── components/       # React components
-│   ├── Header/      # Top navigation
-│   ├── Dashboard/   # Main dashboard layout
-│   ├── Panel/       # Reusable panel component
-│   └── panels/      # Individual panel implementations
-├── hooks/           # Custom React hooks
-├── services/        # API and data services
-├── utils/           # Helper functions
-└── config/          # Configuration files
+│   ├── Navbar/       # Top navigation bar
+│   ├── Dashboard/    # Main dashboard layout
+│   ├── GlobalMap/    # Interactive world map
+│   ├── SettingsModal/# Theme & settings modal
+│   ├── CommandModal/ # Focus mode selector
+│   ├── TickerStrip/  # Live market ticker
+│   ├── CategoryTabs/ # Panel filter tabs
+│   ├── ErrorBoundary/# Error boundary wrapper
+│   └── panels/       # Individual panel implementations
+├── hooks/            # Custom React hooks
+├── services/
+│   └── feeds/        # RSS feed services
+├── utils/            # Helper functions
+├── config/           # App configuration
+└── context/          # React context providers
 ```
 
 ## Configuration
