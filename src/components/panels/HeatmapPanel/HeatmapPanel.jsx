@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatPercent } from '@utils'
 import './HeatmapPanel.css'
 
 const SECTORS = [
@@ -32,19 +33,15 @@ const HeatmapPanel = () => {
       for (const sector of SECTORS) {
         try {
           const response = await fetch(
-            `https://query1.finance.yahoo.com/v8/finance/chart/${sector.symbol}?interval=1d&range=1d`,
-            {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-              }
-            }
+            `/api/yahoo/v8/finance/chart/${sector.symbol}?interval=1d&range=1d`
           )
           const json = await response.json()
-          const quote = json.chart.result[0]
-          const meta = quote.meta
+          const meta = json.chart?.result?.[0]?.meta
 
-          data[sector.symbol] = {
-            change: ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100
+          if (meta) {
+            data[sector.symbol] = {
+              change: ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100
+            }
           }
         } catch (e) {
           console.error(`Failed to fetch ${sector.symbol}`)
@@ -85,9 +82,7 @@ const HeatmapPanel = () => {
             className={`heatmap-cell ${getColorClass(data.change)}`}
           >
             <div className="sector-name">{sector.name}</div>
-            <div className="sector-change">
-              {data.change >= 0 ? '+' : ''}{data.change.toFixed(2)}%
-            </div>
+            <div className="sector-change">{formatPercent(data.change)}</div>
           </div>
         )
       })}

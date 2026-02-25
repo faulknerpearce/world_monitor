@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { WarWatchFeedService } from '@services'
+import { WarWatchFeedService } from '@services/feeds'
+import { getTimeAgo } from '@utils/dateHelpers'
 import './WarWatchPanel.css'
 
 // Active conflict zones
@@ -33,8 +34,6 @@ const WarWatchPanel = () => {
             setLoading(false)
         }
     }
-
-    const getTimeAgo = (date) => WarWatchFeedService.getTimeAgo(date)
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading conflict data...</div>

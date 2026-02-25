@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { BaseFeedService } from '@services'
+import { BaseFeedService } from '@services/feeds'
+import { getTimeAgo } from '@utils/dateHelpers'
 import './NewsPanel.css'
 
 const NewsPanel = ({ feeds, title }) => {
@@ -19,7 +20,6 @@ const NewsPanel = ({ feeds, title }) => {
       const items = await BaseFeedService.fetchFeeds(feeds, { maxItems: 50 })
       setNews(items)
       setError(null)
-      console.log(`Total news items loaded: ${items.length}`)
     } catch (e) {
       console.error('News fetch error:', e)
       setError(`Failed to load news: ${e.message}`)
@@ -28,8 +28,6 @@ const NewsPanel = ({ feeds, title }) => {
       setLoading(false)
     }
   }
-
-  const getTimeAgo = (date) => BaseFeedService.getTimeAgo(date)
 
   // Get unique sources count
   const uniqueSources = [...new Set(news.map(item => item.source))].length

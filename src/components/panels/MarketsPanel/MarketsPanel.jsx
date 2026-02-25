@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatNumber, formatPercent } from '@utils'
 import './MarketsPanel.css'
 
 const MARKETS = [
@@ -26,21 +27,19 @@ const MarketsPanel = () => {
       for (const market of MARKETS) {
         try {
           const response = await fetch(
-            `https://query1.finance.yahoo.com/v8/finance/chart/${market.symbol}?interval=1d&range=1d`,
-            {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-              }
-            }
+            `/api/yahoo/v8/finance/chart/${market.symbol}?interval=1d&range=1d`
           )
           const json = await response.json()
-          const quote = json.chart.result[0]
-          const meta = quote.meta
+          const meta = json.chart?.result?.[0]?.meta
 
-          data[market.symbol] = {
-            price: meta.regularMarketPrice,
-            change: meta.regularMarketPrice - meta.chartPreviousClose,
-            changePercent: ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100
+          if (meta) {
+            const price = meta.regularMarketPrice
+            const prevClose = meta.chartPreviousClose
+            data[market.symbol] = {
+              price,
+              change: price - prevClose,
+              changePercent: ((price - prevClose) / prevClose) * 100
+            }
           }
         } catch (e) {
           console.error(`Failed to fetch ${market.symbol}`)
@@ -52,17 +51,6 @@ const MarketsPanel = () => {
       console.error('Markets fetch error:', e)
       setLoading(false)
     }
-  }
-
-  const formatNumber = (num) => {
-    if (!num) return '0.00'
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }
-
-  const formatPercent = (num) => {
-    if (!num) return '+0.00%'
-    const sign = num >= 0 ? '+' : ''
-    return `${sign}${num.toFixed(2)}%`
   }
 
   if (loading) {

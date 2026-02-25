@@ -1,4 +1,4 @@
-import { BaseFeedService } from '../feeds/baseFeedService.js'
+import { BaseFeedService } from './baseFeedService.js'
 import { FEED_CONFIG } from './feedConfig.js'
 
 /**

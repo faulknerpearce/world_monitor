@@ -5,8 +5,8 @@ import {
   US_CITIES, SHIPPING_CHOKEPOINTS, MILITARY_BASES,
   NUCLEAR_FACILITIES, UNDERSEA_CABLES, CYBER_REGIONS
 } from '@config/regions.js'
-import { MapFeedService } from '@services/feeds_map'
-import { useDynamicRegions } from '@services/useDynamicRegions.js'
+import { MapFeedService } from '@services/feeds'
+import { useDynamicRegions } from '@hooks/useDynamicRegions'
 import HotspotModal from './HotspotModal/HotspotModal'
 import TickerStrip from '@components/TickerStrip/TickerStrip'
 import './GlobalMap.css'

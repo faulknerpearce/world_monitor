@@ -1,2 +1,11 @@
-// Re-export from parent services index
 export { BaseFeedService } from './baseFeedService.js'
+export { FEED_CONFIG, NEWS_FEEDS } from './feedConfig.js'
+export { AIRaceFeedService } from './aiRaceFeedService.js'
+export { BlockchainFeedService } from './blockchainFeedService.js'
+export { GoodNewsFeedService } from './goodNewsFeedService.js'
+export { LayoffsFeedService } from './layoffsFeedService.js'
+export { MapFeedService } from './mapFeedService.js'
+export { NewsFeedService } from './newsFeedService.js'
+export { StartupsFeedService } from './startupsFeedService.js'
+export { VCFeedService } from './vcFeedService.js'
+export { WarWatchFeedService } from './warWatchFeedService.js'

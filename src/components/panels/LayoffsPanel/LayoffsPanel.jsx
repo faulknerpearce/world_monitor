@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LayoffsFeedService } from '@services'
+import { LayoffsFeedService } from '@services/feeds'
+import { formatCount, getTimeAgo } from '@utils'
 import './LayoffsPanel.css'
 
 // Real recent major layoffs (2025/2026)
@@ -43,13 +44,6 @@ const LayoffsPanel = () => {
             setLoading(false)
         }
     }
-
-    const formatCount = (count) => {
-        if (count >= 1000) return `${(count / 1000).toFixed(1)}K`
-        return count.toString()
-    }
-
-    const getTimeAgo = (date) => LayoffsFeedService.getTimeAgo(date)
 
     return (
         <div className="layoffs-panel">

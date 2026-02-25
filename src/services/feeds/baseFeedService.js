@@ -19,7 +19,6 @@ export class BaseFeedService {
 
     for (const feed of feeds) {
       try {
-        console.log(`Fetching ${feed.name}...`)
         const xmlText = await fetchWithProxy(feed.url)
         const items = parseRSS(xmlText)
         
@@ -29,7 +28,6 @@ export class BaseFeedService {
         
         allItems.push(...items)
         successCount++
-        console.log(`Successfully fetched ${items.length} items from ${feed.name}`)
       } catch (e) {
         console.error(`Failed to fetch ${feed.name}:`, e.message)
       }
@@ -39,10 +37,8 @@ export class BaseFeedService {
       throw new Error('All feeds failed to load')
     }
 
-    console.log(`Total items loaded: ${allItems.length} from ${successCount}/${feeds.length} feeds`)
-
     // Sort by date, newest first
-    allItems.sort((a, b) => b.timestamp - a.timestamp)
+    allItems.sort((a, b) => b.date - a.date)
 
     // Limit items if specified
     return maxItems ? allItems.slice(0, maxItems) : allItems
@@ -63,34 +59,9 @@ export class BaseFeedService {
     })
 
     // Sort by date, newest first
-    items.sort((a, b) => b.timestamp - a.timestamp)
+    items.sort((a, b) => b.date - a.date)
 
     return maxItems ? items.slice(0, maxItems) : items
-  }
-
-  /**
-   * Calculate time ago string from a date
-   * @param {Date} date - Date to calculate from
-   * @returns {string} Time ago string (e.g., "5m", "2h", "3d")
-   */
-  static getTimeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000)
-    const intervals = {
-      y: 31536000,
-      mo: 2592000,
-      w: 604800,
-      d: 86400,
-      h: 3600,
-      m: 60
-    }
-
-    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-      const interval = Math.floor(seconds / secondsInUnit)
-      if (interval >= 1) {
-        return `${interval}${unit}`
-      }
-    }
-    return 'now'
   }
 
   /**
