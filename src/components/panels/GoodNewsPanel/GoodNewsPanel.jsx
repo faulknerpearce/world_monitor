@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { GoodNewsFeedService } from '@services'
+import { GoodNewsFeedService } from '@services/feeds'
+import { getTimeAgo } from '@utils/dateHelpers'
 import './GoodNewsPanel.css'
 
 // Positive stats
@@ -30,8 +31,6 @@ const GoodNewsPanel = () => {
             setLoading(false)
         }
     }
-
-    const getTimeAgo = (date) => GoodNewsFeedService.getTimeAgo(date)
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading good news...</div>

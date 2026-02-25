@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchWithProxy } from '@utils/fetchUtils.js'
-import { BlockchainFeedService } from '@services'
+import { BlockchainFeedService } from '@services/feeds'
+import { getTimeAgo } from '@utils/dateHelpers'
 import './BlockchainPanel.css'
 
 // Mock on-chain data
@@ -89,8 +90,6 @@ const BlockchainPanel = () => {
             setLoading(false)
         }
     }
-
-    const getTimeAgo = (date) => BlockchainFeedService.getTimeAgo(date)
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading blockchain data...</div>

@@ -3,6 +3,13 @@ import { HOTSPOTS, INTEL_HOTSPOTS, US_HOTSPOTS, CONFLICT_ZONES } from '@config/r
 import { NEWS_FEEDS } from '@services/feeds'
 import { fetchWithProxy, parseRSS } from '@utils/fetchUtils.js'
 
+// Urgency keywords that increase severity scores
+const URGENCY_KEYWORDS = [
+  'crisis', 'emergency', 'attack', 'strike', 'bomb', 'explosion',
+  'casualties', 'killed', 'wounded', 'urgent', 'breaking',
+  'escalation', 'conflict', 'war', 'military action', 'invasion'
+]
+
 /**
  * Hook to manage dynamic regions data with periodic refresh
  * @param {number} refreshInterval - Refresh interval in milliseconds (default: 10 minutes)
@@ -18,13 +25,6 @@ export const useDynamicRegions = (refreshInterval = 10 * 60 * 1000) => {
     eventHistory: []
   })
   const [loading, setLoading] = useState(false)
-
-  // Urgency keywords that increase severity (defined once)
-  const urgencyKeywords = [
-    'crisis', 'emergency', 'attack', 'strike', 'bomb', 'explosion',
-    'casualties', 'killed', 'wounded', 'urgent', 'breaking',
-    'escalation', 'conflict', 'war', 'military action', 'invasion'
-  ]
 
   /**
    * Enhanced severity calculation based on multiple factors:
@@ -63,7 +63,7 @@ export const useDynamicRegions = (refreshInterval = 10 * 60 * 1000) => {
         })
 
         // Check for urgency keywords
-        urgencyKeywords.forEach(urgentWord => {
+        URGENCY_KEYWORDS.forEach(urgentWord => {
           if (text.includes(urgentWord)) {
             urgencyScore++
           }

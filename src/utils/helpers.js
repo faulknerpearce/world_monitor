@@ -10,38 +10,17 @@ export const formatPercent = (num) => {
   return `${sign}${num.toFixed(2)}%`
 }
 
-export const formatCurrency = (num) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(num)
+export const formatAmount = (amount) => {
+  if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}B`
+  return `$${amount}M`
 }
 
-export const formatDate = (date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  }).format(new Date(date))
+export const formatCount = (count) => {
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`
+  return count.toString()
 }
 
 export const truncateText = (text, maxLength = 100) => {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength) + '...'
-}
-
-export const debounce = (func, wait) => {
-  let timeout
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait)
-  }
 }

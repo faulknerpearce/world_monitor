@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { VCFeedService } from '@services'
+import { VCFeedService } from '@services/feeds'
+import { formatAmount, getTimeAgo } from '@utils'
 import './VCPanel.css'
 
 // Recent major VC fund raises (2025/2026)
@@ -42,13 +43,6 @@ const VCPanel = () => {
             setLoading(false)
         }
     }
-
-    const formatAmount = (amount) => {
-        if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}B`
-        return `$${amount}M`
-    }
-
-    const getTimeAgo = (date) => VCFeedService.getTimeAgo(date)
 
     return (
         <div className="vc-panel">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AIRaceFeedService } from '@services'
+import { AIRaceFeedService } from '@services/feeds'
+import { getTimeAgo } from '@utils/dateHelpers'
 import './AIRacePanel.css'
 
 // Key players in the AI race
@@ -26,8 +27,6 @@ const AIRacePanel = () => {
             setLoading(false)
         }
     }
-
-    const getTimeAgo = (date) => AIRaceFeedService.getTimeAgo(date)
 
     return (
         <div className="ai-panel">

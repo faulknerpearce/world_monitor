@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { StartupsFeedService } from '@services'
+import { StartupsFeedService } from '@services/feeds'
+import { formatAmount, getTimeAgo } from '@utils'
 import './StartupsPanel.css'
 
 // Recent major funding rounds (2025/2026)
@@ -42,13 +43,6 @@ const StartupsPanel = () => {
             setLoading(false)
         }
     }
-
-    const formatAmount = (amount) => {
-        if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}B`
-        return `$${amount}M`
-    }
-
-    const getTimeAgo = (date) => StartupsFeedService.getTimeAgo(date)
 
     // Calculate total raised from RECENT_FUNDING
     const totalRaisedVal = RECENT_FUNDING.reduce((acc, curr) => acc + curr.amount, 0)
