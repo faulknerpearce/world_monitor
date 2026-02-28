@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { StartupsFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
 import { formatAmount, getTimeAgo } from '@utils'
 import './StartupsPanel.css'
 
@@ -17,32 +17,11 @@ const RECENT_FUNDING = [
     { company: 'Lambda', amount: 500, round: 'Series C', lead: 'USV', date: 'Aug 2025' },
 ]
 
-const STARTUP_STATS = {
-    totalRaised: '$574.95M', // Placeholder, using static string from design or calculated
-    deals: 10
-}
-
 const StartupsPanel = () => {
-    const [news, setNews] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        fetchNews()
-        const interval = setInterval(fetchNews, 10 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const fetchNews = async () => {
-        try {
-            setLoading(true)
-            const items = await StartupsFeedService.fetchStartupNews(10)
-            setNews(items)
-        } catch (e) {
-            console.error('Startups news fetch error:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: news, loading } = useFeedData(
+        () => StartupsFeedService.fetchStartupNews(10),
+        10 * 60 * 1000
+    )
 
     // Calculate total raised from RECENT_FUNDING
     const totalRaisedVal = RECENT_FUNDING.reduce((acc, curr) => acc + curr.amount, 0)

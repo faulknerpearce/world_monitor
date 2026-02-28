@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { fetchWithProxy } from '@utils/fetchUtils.js'
 import { BlockchainFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
+import { RefreshContext } from '@context/RefreshContext'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './BlockchainPanel.css'
 
@@ -13,83 +15,75 @@ const MOCK_CHAIN_DATA = {
 }
 
 const BlockchainPanel = () => {
-    const [news, setNews] = useState([])
+    const { data: news, loading } = useFeedData(
+        () => BlockchainFeedService.fetchCryptoNews(15),
+        5 * 60 * 1000
+    )
     const [chainData, setChainData] = useState(MOCK_CHAIN_DATA)
-    const [loading, setLoading] = useState(true)
+    const { refreshKey } = useContext(RefreshContext)
 
     useEffect(() => {
-        fetchCryptoNews()
+        let cancelled = false
+
+        const fetchChainData = async () => {
+            try {
+                const data = { ...MOCK_CHAIN_DATA }
+
+                // BTC Hashrate from BTC.com API
+                try {
+                    const btcResponse = await fetchWithProxy('https://chain.api.btc.com/v3/block/latest')
+                    const btcData = JSON.parse(btcResponse)
+                    if (btcData.data && btcData.data.extras && btcData.data.extras.avg_hashrate) {
+                        const hashrate = btcData.data.extras.avg_hashrate / 1e18 // Convert to EH/s
+                        data.btcHashrate = `${hashrate.toFixed(1)} EH/s`
+                    }
+                } catch (e) {
+                    console.error('BTC hashrate fetch error:', e)
+                }
+
+                // ETH Gas from Etherscan (no API key needed for basic requests)
+                try {
+                    const ethResponse = await fetchWithProxy('https://api.etherscan.io/api?module=gastracker&action=gasoracle')
+                    const ethData = JSON.parse(ethResponse)
+                    if (ethData.result && ethData.result.ProposeGasPrice) {
+                        data.ethGas = `${ethData.result.ProposeGasPrice} gwei`
+                    }
+                } catch (e) {
+                    console.error('ETH gas fetch error:', e)
+                }
+
+                // DeFi TVL from DeFi Llama
+                try {
+                    const defiResponse = await fetchWithProxy('https://api.llama.fi/tvl')
+                    const defiData = JSON.parse(defiResponse)
+                    const totalTvl = Object.values(defiData).reduce((sum, val) => sum + val, 0)
+                    data.defiTvl = `$${(totalTvl / 1e9).toFixed(1)}B`
+                } catch (e) {
+                    console.error('DeFi TVL fetch error:', e)
+                }
+
+                // NFT Volume - using mock data (OpenSea API requires key)
+                // TODO: Integrate with OpenSea API or similar for real NFT volume data
+                data.nftVolume = MOCK_CHAIN_DATA.nftVolume
+
+                if (!cancelled) setChainData(data)
+            } catch (e) {
+                console.error('Chain data fetch error:', e)
+                if (!cancelled) setChainData(MOCK_CHAIN_DATA)
+            }
+        }
+
         fetchChainData()
-        const newsInterval = setInterval(fetchCryptoNews, 5 * 60 * 1000)
         const dataInterval = setInterval(fetchChainData, 2 * 60 * 1000) // Update chain data every 2 minutes
         return () => {
-            clearInterval(newsInterval)
+            cancelled = true
             clearInterval(dataInterval)
         }
-    }, [])
-
-    const fetchChainData = async () => {
-        try {
-            const data = { ...MOCK_CHAIN_DATA }
-
-            // BTC Hashrate from BTC.com API
-            try {
-                const btcResponse = await fetchWithProxy('https://chain.api.btc.com/v3/block/latest')
-                const btcData = JSON.parse(btcResponse)
-                if (btcData.data && btcData.data.extras && btcData.data.extras.avg_hashrate) {
-                    const hashrate = btcData.data.extras.avg_hashrate / 1e18 // Convert to EH/s
-                    data.btcHashrate = `${hashrate.toFixed(1)} EH/s`
-                }
-            } catch (e) {
-                console.error('BTC hashrate fetch error:', e)
-                data.btcHashrate = MOCK_CHAIN_DATA.btcHashrate
-            }
-
-            // ETH Gas from Etherscan (no API key needed for basic requests)
-            try {
-                const ethResponse = await fetchWithProxy('https://api.etherscan.io/api?module=gastracker&action=gasoracle')
-                const ethData = JSON.parse(ethResponse)
-                if (ethData.result && ethData.result.ProposeGasPrice) {
-                    data.ethGas = `${ethData.result.ProposeGasPrice} gwei`
-                }
-            } catch (e) {
-                console.error('ETH gas fetch error:', e)
-                data.ethGas = MOCK_CHAIN_DATA.ethGas
-            }
-
-            // DeFi TVL from DeFi Llama
-            try {
-                const defiResponse = await fetchWithProxy('https://api.llama.fi/tvl')
-                const defiData = JSON.parse(defiResponse)
-                const totalTvl = Object.values(defiData).reduce((sum, val) => sum + val, 0)
-                data.defiTvl = `$${(totalTvl / 1e9).toFixed(1)}B`
-            } catch (e) {
-                console.error('DeFi TVL fetch error:', e)
-                data.defiTvl = MOCK_CHAIN_DATA.defiTvl
-            }
-
-            // NFT Volume - using mock data (OpenSea API requires key)
-            // TODO: Integrate with OpenSea API or similar for real NFT volume data
-            data.nftVolume = MOCK_CHAIN_DATA.nftVolume
-
-            setChainData(data)
-        } catch (e) {
-            console.error('Chain data fetch error:', e)
-            setChainData(MOCK_CHAIN_DATA)
-        }
-    }
-
-    const fetchCryptoNews = async () => {
-        try {
-            setLoading(true)
-            const items = await BlockchainFeedService.fetchCryptoNews(15)
-            setNews(items)
-        } catch (e) {
-            console.error('Crypto news fetch error:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+        // `fetchChainData` is defined inline and would cause an infinite loop if
+        // included in the deps array. `refreshKey` is intentionally included to force
+        // a re-fetch when the user clicks the REFRESH button.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [refreshKey])
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading blockchain data...</div>

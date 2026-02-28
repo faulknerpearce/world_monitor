@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { WarWatchFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './WarWatchPanel.css'
 
@@ -14,26 +14,10 @@ const CONFLICT_ZONES = [
 ]
 
 const WarWatchPanel = () => {
-    const [news, setNews] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        fetchNews()
-        const interval = setInterval(fetchNews, 5 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const fetchNews = async () => {
-        try {
-            setLoading(true)
-            const items = await WarWatchFeedService.fetchWarNews(15)
-            setNews(items)
-        } catch (e) {
-            console.error('War news fetch error:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: news, loading } = useFeedData(
+        () => WarWatchFeedService.fetchWarNews(15),
+        5 * 60 * 1000
+    )
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading conflict data...</div>

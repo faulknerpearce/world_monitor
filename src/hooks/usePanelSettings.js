@@ -1,22 +1,10 @@
-import { useState } from 'react'
+import { useLocalStorage } from './useLocalStorage.js'
 
 export const usePanelSettings = () => {
-  const [panelSettings, setPanelSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('situationMonitorPanels')
-      return saved ? JSON.parse(saved) : {}
-    } catch (error) {
-      console.error('Error loading panel settings from localStorage:', error)
-      return {}
-    }
-  })
+  const [panelSettings, setPanelSettings] = useLocalStorage('situationMonitorPanels', {})
 
   const togglePanel = (panelId) => {
-    setPanelSettings(prev => {
-      const newSettings = { ...prev, [panelId]: !prev[panelId] }
-      localStorage.setItem('situationMonitorPanels', JSON.stringify(newSettings))
-      return newSettings
-    })
+    setPanelSettings(prev => ({ ...prev, [panelId]: !prev[panelId] }))
   }
 
   const isPanelEnabled = (panelId) => {
@@ -29,3 +17,4 @@ export const usePanelSettings = () => {
     isPanelEnabled
   }
 }
+

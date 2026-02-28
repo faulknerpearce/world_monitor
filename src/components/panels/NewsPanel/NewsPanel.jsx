@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { BaseFeedService } from '@services/feeds'
+import { RefreshContext } from '@context/RefreshContext'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './NewsPanel.css'
 
@@ -7,27 +8,41 @@ const NewsPanel = ({ feeds, title }) => {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { refreshKey } = useContext(RefreshContext)
 
   useEffect(() => {
+    let cancelled = false
+
+    const fetchNews = async () => {
+      try {
+        setLoading(true)
+        const items = await BaseFeedService.fetchFeeds(feeds, { maxItems: 50 })
+        if (!cancelled) {
+          setNews(items)
+          setError(null)
+        }
+      } catch (e) {
+        console.error('News fetch error:', e)
+        if (!cancelled) {
+          setError(`Failed to load news: ${e.message}`)
+          setNews([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
     fetchNews()
     const interval = setInterval(fetchNews, 5 * 60 * 1000) // Refresh every 5 minutes
-    return () => clearInterval(interval)
-  }, [feeds])
-
-  const fetchNews = async () => {
-    try {
-      setLoading(true)
-      const items = await BaseFeedService.fetchFeeds(feeds, { maxItems: 50 })
-      setNews(items)
-      setError(null)
-    } catch (e) {
-      console.error('News fetch error:', e)
-      setError(`Failed to load news: ${e.message}`)
-      setNews([])
-    } finally {
-      setLoading(false)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
     }
-  }
+    // `feeds` is intentionally the only stable dep; `fetchNews` is defined inline
+    // and would cause an infinite loop if included. `refreshKey` forces a new cycle
+    // when the user clicks the REFRESH button.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [feeds, refreshKey])
 
   // Get unique sources count
   const uniqueSources = [...new Set(news.map(item => item.source))].length

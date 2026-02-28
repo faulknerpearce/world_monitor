@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { LayoffsFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
 import { formatCount, getTimeAgo } from '@utils'
 import './LayoffsPanel.css'
 
@@ -24,26 +24,10 @@ const LAYOFF_STATS = {
 }
 
 const LayoffsPanel = () => {
-    const [news, setNews] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        fetchNews()
-        const interval = setInterval(fetchNews, 15 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const fetchNews = async () => {
-        try {
-            setLoading(true)
-            const items = await LayoffsFeedService.fetchLayoffsNews(10)
-            setNews(items)
-        } catch (e) {
-            console.error('Failed to fetch layoff news:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: news, loading } = useFeedData(
+        () => LayoffsFeedService.fetchLayoffsNews(10),
+        15 * 60 * 1000
+    )
 
     return (
         <div className="layoffs-panel">
