@@ -1,9 +1,10 @@
-import { useEffect, useState, useContext } from 'react'
+import { useEffect, useState, useContext, useCallback } from 'react'
 import { fetchWithProxy } from '@core/utils/fetchUtils.js'
 import { BlockchainFeedService } from '../service/blockchainFeedService'
 import { useFeedData } from '@core/hooks/useFeedData'
 import { RefreshContext } from '@core/context/RefreshContext'
 import { getTimeAgo } from '@core/utils/dateHelpers'
+import ArticleModal from '@common/ui/ArticleModal/ArticleModal'
 import './BlockchainPanel.css'
 
 // Mock on-chain data
@@ -21,6 +22,12 @@ const BlockchainPanel = () => {
     )
     const [chainData, setChainData] = useState(MOCK_CHAIN_DATA)
     const { refreshKey } = useContext(RefreshContext)
+    const [selectedArticle, setSelectedArticle] = useState(null)
+
+    const handleArticleClick = useCallback((e, item) => {
+        e.preventDefault()
+        setSelectedArticle(item)
+    }, [])
 
     useEffect(() => {
         let cancelled = false
@@ -90,38 +97,45 @@ const BlockchainPanel = () => {
     }
 
     return (
-        <div className="blockchain-panel">
-            <div className="chain-stats">
-                <div className="chain-stat">
-                    <span className="chain-stat-label">BTC Hashrate</span>
-                    <span className="chain-stat-value">{chainData.btcHashrate}</span>
+        <>
+            <div className="blockchain-panel">
+                <div className="chain-stats">
+                    <div className="chain-stat">
+                        <span className="chain-stat-label">BTC Hashrate</span>
+                        <span className="chain-stat-value">{chainData.btcHashrate}</span>
+                    </div>
+                    <div className="chain-stat">
+                        <span className="chain-stat-label">ETH Gas</span>
+                        <span className="chain-stat-value">{chainData.ethGas}</span>
+                    </div>
+                    <div className="chain-stat">
+                        <span className="chain-stat-label">DeFi TVL</span>
+                        <span className="chain-stat-value green">{chainData.defiTvl}</span>
+                    </div>
+                    <div className="chain-stat">
+                        <span className="chain-stat-label">NFT 24h</span>
+                        <span className="chain-stat-value">{chainData.nftVolume}</span>
+                    </div>
                 </div>
-                <div className="chain-stat">
-                    <span className="chain-stat-label">ETH Gas</span>
-                    <span className="chain-stat-value">{chainData.ethGas}</span>
-                </div>
-                <div className="chain-stat">
-                    <span className="chain-stat-label">DeFi TVL</span>
-                    <span className="chain-stat-value green">{chainData.defiTvl}</span>
-                </div>
-                <div className="chain-stat">
-                    <span className="chain-stat-label">NFT 24h</span>
-                    <span className="chain-stat-value">{chainData.nftVolume}</span>
+
+                <div className="crypto-news">
+                    {news.map((item, idx) => (
+                        <div key={idx} className="crypto-item" onClick={(e) => handleArticleClick(e, item)} style={{ cursor: 'pointer' }}>
+                            <div className="crypto-source">{item.source}</div>
+                            <span className="crypto-title">{item.title}</span>
+                            <div className="crypto-time">{getTimeAgo(item.date)}</div>
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            <div className="crypto-news">
-                {news.map((item, idx) => (
-                    <div key={idx} className="crypto-item">
-                        <div className="crypto-source">{item.source}</div>
-                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="crypto-title">
-                            {item.title}
-                        </a>
-                        <div className="crypto-time">{getTimeAgo(item.date)}</div>
-                    </div>
-                ))}
-            </div>
-        </div>
+            {selectedArticle && (
+                <ArticleModal
+                    article={selectedArticle}
+                    onClose={() => setSelectedArticle(null)}
+                />
+            )}
+        </>
     )
 }
 

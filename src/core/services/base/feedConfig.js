@@ -55,6 +55,22 @@ export const FEED_CONFIG = {
     { name: 'Cointelegraph', url: 'https://cointelegraph.com/rss' },
     { name: 'The Block', url: 'https://www.theblock.co/rss.xml' }
   ],
+
+  chainNews: {
+    ethereum: [
+      { name: 'CoinDesk ETH', url: 'https://www.coindesk.com/arc/outboundfeeds/rss/category/tech/ethereum/' },
+      { name: 'Cointelegraph ETH', url: 'https://cointelegraph.com/tags/ethereum/rss' },
+      { name: 'ETH News', url: 'https://news.google.com/rss/search?q=Ethereum+blockchain&hl=en-US&gl=US&ceid=US:en' }
+    ],
+    cardano: [
+      { name: 'IOHK Blog', url: 'https://iohk.io/en/blog/rss.xml' },
+      { name: 'Cardano Feed', url: 'https://news.google.com/rss/search?q=Cardano+ADA+blockchain&hl=en-US&gl=US&ceid=US:en' }
+    ],
+    avalanche: [
+      { name: 'Ava Labs Blog', url: 'https://medium.com/feed/avalancheavax' },
+      { name: 'Avalanche Feed', url: 'https://news.google.com/rss/search?q=Avalanche+AVAX+blockchain&hl=en-US&gl=US&ceid=US:en' }
+    ]
+  },
   
   aiRace: [
     { name: 'TechCrunch AI', url: 'https://techcrunch.com/category/artificial-intelligence/feed/' },

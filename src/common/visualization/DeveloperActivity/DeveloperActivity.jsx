@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { fetchChainActivity } from '@core/services/githubActivity'
 import { fetchChainStats, formatTVL, formatCount } from '@core/services/chainStats'
+import { BaseFeedService } from '@core/services/base/baseFeedService'
+import { FEED_CONFIG } from '@core/services/base/feedConfig'
+import { getTimeAgo } from '@core/utils/dateHelpers'
+import ArticleModal from '@common/ui/ArticleModal/ArticleModal'
 import './DeveloperActivity.css'
 
 const CHAIN_CONFIGS = {
@@ -266,8 +270,66 @@ const ChainCard = ({ chainKey, stats }) => {
     )
 }
 
+const ChainNewsFeed = ({ chainKey, onArticleClick }) => {
+    const config = CHAIN_CONFIGS[chainKey]
+    const feeds = FEED_CONFIG.chainNews?.[chainKey] ?? []
+    const [news, setNews] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (feeds.length === 0) {
+            setLoading(false)
+            return
+        }
+        let cancelled = false
+        setLoading(true)
+        BaseFeedService.fetchFeeds(feeds, { maxItems: 5 })
+            .then(items => { if (!cancelled) { setNews(items); setLoading(false) } })
+            .catch(err => {
+                console.error(`Failed to load ${config.name} news:`, err)
+                if (!cancelled) setLoading(false)
+            })
+        return () => { cancelled = true }
+        // `feeds` is derived from the static FEED_CONFIG constant keyed by `chainKey`;
+        // using `chainKey` as the dep is sufficient and avoids a stale-closure loop.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chainKey])
+
+    if (feeds.length === 0) return null
+
+    return (
+        <div className="chain-news-feed">
+            <div className="chain-news-feed-header" style={{ color: config.color }}>
+                {config.name} News
+            </div>
+            {loading ? (
+                <div className="chain-news-loading">Loading...</div>
+            ) : news.length === 0 ? (
+                <div className="chain-news-loading">No articles available.</div>
+            ) : (
+                <div className="chain-news-list">
+                    {news.map((item, idx) => (
+                        <button
+                            key={idx}
+                            className="chain-news-item"
+                            onClick={() => onArticleClick(item)}
+                        >
+                            <span className="chain-news-title">{item.title}</span>
+                            <span className="chain-news-meta">
+                                <span className="chain-news-source">{item.source}</span>
+                                <span className="chain-news-time">{getTimeAgo(item.date)}</span>
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 const ChainActivity = () => {
     const [stats, setStats] = useState(null)
+    const [selectedArticle, setSelectedArticle] = useState(null)
 
     useEffect(() => {
         fetchChainStats()
@@ -276,16 +338,28 @@ const ChainActivity = () => {
     }, [])
 
     return (
-        <div className="chain-activity">
-            <div className="chain-activity-header">
-                <span className="chain-activity-title">CHAIN ACTIVITY -- LAST 52 WEEKS</span>
+        <>
+            <div className="chain-activity">
+                <div className="chain-activity-header">
+                    <span className="chain-activity-title">CHAIN ACTIVITY -- LAST 52 WEEKS</span>
+                </div>
+                <div className="chain-activity-grid">
+                    {Object.keys(CHAIN_CONFIGS).map(key => (
+                        <div key={key} className="chain-column">
+                            <ChainCard chainKey={key} stats={stats} />
+                            <ChainNewsFeed chainKey={key} onArticleClick={setSelectedArticle} />
+                        </div>
+                    ))}
+                </div>
             </div>
-            <div className="chain-activity-grid">
-                {Object.keys(CHAIN_CONFIGS).map(key => (
-                    <ChainCard key={key} chainKey={key} stats={stats} />
-                ))}
-            </div>
-        </div>
+
+            {selectedArticle && (
+                <ArticleModal
+                    article={selectedArticle}
+                    onClose={() => setSelectedArticle(null)}
+                />
+            )}
+        </>
     )
 }
 

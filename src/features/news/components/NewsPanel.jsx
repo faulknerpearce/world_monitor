@@ -1,14 +1,21 @@
-import { useEffect, useState, useContext } from 'react'
+import { useEffect, useState, useContext, useCallback } from 'react'
 import { BaseFeedService } from '@core/services/base/baseFeedService'
 import { RefreshContext } from '@core/context/RefreshContext'
 import { getTimeAgo } from '@core/utils/dateHelpers'
+import ArticleModal from '@common/ui/ArticleModal/ArticleModal'
 import './NewsPanel.css'
 
 const NewsPanel = ({ feeds, title }) => {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedArticle, setSelectedArticle] = useState(null)
   const { refreshKey } = useContext(RefreshContext)
+
+  const handleArticleClick = useCallback((e, item) => {
+    e.preventDefault()
+    setSelectedArticle(item)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -67,34 +74,41 @@ const NewsPanel = ({ feeds, title }) => {
   }
 
   return (
-    <div className={`news-panel ${getThemeClass()}`}>
-      <div className="news-summary">
-        <div className="summary-stat">
-          <span className="stat-value">{news.length}</span>
-          <span className="stat-label">Articles</span>
+    <>
+      <div className={`news-panel ${getThemeClass()}`}>
+        <div className="news-summary">
+          <div className="summary-stat">
+            <span className="stat-value">{news.length}</span>
+            <span className="stat-label">Articles</span>
+          </div>
+          <div className="summary-stat">
+            <span className="stat-value">{uniqueSources}</span>
+            <span className="stat-label">Sources</span>
+          </div>
+          <div className="summary-stat live-indicator">
+            <span className="pulse-dot"></span>
+            <span className="stat-label">LIVE</span>
+          </div>
         </div>
-        <div className="summary-stat">
-          <span className="stat-value">{uniqueSources}</span>
-          <span className="stat-label">Sources</span>
-        </div>
-        <div className="summary-stat live-indicator">
-          <span className="pulse-dot"></span>
-          <span className="stat-label">LIVE</span>
+
+        <div className="news-list">
+          {news.map((item, idx) => (
+            <div key={idx} className="item" onClick={(e) => handleArticleClick(e, item)}>
+              <div className="item-source">{item.source}</div>
+              <span className="item-title">{item.title}</span>
+              <div className="item-time">{getTimeAgo(item.date)}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="news-list">
-        {news.map((item, idx) => (
-          <div key={idx} className="item">
-            <div className="item-source">{item.source}</div>
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="item-title">
-              {item.title}
-            </a>
-            <div className="item-time">{getTimeAgo(item.date)}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+      {selectedArticle && (
+        <ArticleModal
+          article={selectedArticle}
+          onClose={() => setSelectedArticle(null)}
+        />
+      )}
+    </>
   )
 }
 
