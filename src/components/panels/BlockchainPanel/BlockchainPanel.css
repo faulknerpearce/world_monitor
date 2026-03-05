@@ -57,7 +57,7 @@
 }
 
 .crypto-source {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
     color: #f59e0b;
     font-weight: 600;
     text-transform: uppercase;
@@ -67,7 +67,7 @@
 
 .crypto-title {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
     text-decoration: none;
     line-height: 1.4;
@@ -79,7 +79,7 @@
 }
 
 .crypto-time {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
     color: var(--text-dim);
     margin-top: 0.25rem;
     font-family: var(--font-mono);

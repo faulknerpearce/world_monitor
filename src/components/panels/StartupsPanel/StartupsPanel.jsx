@@ -39,23 +39,6 @@ const StartupsPanel = () => {
                 </div>
             </div>
 
-            <div className="startups-section-title">MAJOR ROUNDS (2025-26)</div>
-            <div className="startups-list-container">
-                {RECENT_FUNDING.map((deal, idx) => (
-                    <div key={idx} className="startup-list-row">
-                        <div className="startup-row-main">
-                            <span className="startup-row-name">{deal.company}</span>
-                            <span className="startup-row-round">{deal.round}</span>
-                        </div>
-                        <div className="startup-row-meta">
-                            <span className="startup-row-date">{deal.date}</span>
-                            <span className="startup-row-amount green">+{formatAmount(deal.amount)}</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="startups-section-title">NEWS WIRE</div>
             <div className="startups-news-container">
                 {loading && news.length === 0 ? (
                     <div className="loading-msg">Loading startup news...</div>

@@ -86,7 +86,7 @@
 }
 
 .war-source {
-    font-size: 0.5rem;
+    font-size: 0.7rem;
     color: #f87171;
     font-weight: 600;
     text-transform: uppercase;
@@ -96,7 +96,7 @@
 
 .war-title {
     display: block;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
     text-decoration: none;
     line-height: 1.4;
@@ -108,7 +108,7 @@
 }
 
 .war-time {
-    font-size: 0.5rem;
+    font-size: 0.7rem;
     color: var(--text-dim);
     margin-top: 0.2rem;
     font-family: var(--font-mono);

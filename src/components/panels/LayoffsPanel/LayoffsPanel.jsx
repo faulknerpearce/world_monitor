@@ -42,18 +42,6 @@ const LayoffsPanel = () => {
                 </span>
             </div>
 
-            <div className="layoffs-section-title">MAJOR CUTS (2025-26)</div>
-            <div className="layoffs-list-container">
-                {RECENT_LAYOFFS.map((item, idx) => (
-                    <div key={idx} className="layoff-list-row">
-                        <span className="layoff-row-name">{item.company}</span>
-                        <span className="layoff-row-date">{item.date}</span>
-                        <span className="layoff-row-count">-{formatCount(item.count)}</span>
-                    </div>
-                ))}
-            </div>
-
-            <div className="layoffs-section-title">NEWS WIRE</div>
             <div className="layoffs-news-container">
                 {loading ? (
                     <div className="loading-msg">Loading layoff news...</div>

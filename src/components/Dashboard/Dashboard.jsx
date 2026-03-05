@@ -8,9 +8,8 @@ import StartupsPanel from '@components/panels/StartupsPanel/StartupsPanel'
 import VCPanel from '@components/panels/VCPanel/VCPanel'
 import BlockchainPanel from '@components/panels/BlockchainPanel/BlockchainPanel'
 import WarWatchPanel from '@components/panels/WarWatchPanel/WarWatchPanel'
-import GoodNewsPanel from '@components/panels/GoodNewsPanel/GoodNewsPanel'
-import AIRacePanel from '@components/panels/AIRacePanel/AIRacePanel'
 import LayoffsPanel from '@components/panels/LayoffsPanel/LayoffsPanel'
+import DeveloperActivity from '@components/DeveloperActivity/DeveloperActivity'
 import CategoryTabs from '@components/CategoryTabs/CategoryTabs'
 import TickerStrip from '@components/TickerStrip/TickerStrip'
 import { COMMAND_MODES } from '@components/CommandModal/CommandModal'
@@ -18,7 +17,7 @@ import { COMMAND_MODES } from '@components/CommandModal/CommandModal'
 import './Dashboard.css'
 
 // Hero panels are featured at the top with larger size
-const HERO_PANELS = ['politics', 'finance']
+const HERO_PANELS = ['politics', 'blockchain']
 
 const Dashboard = ({ panelSettings, currentMode }) => {
   const [draggedPanel, setDraggedPanel] = useState(null)
@@ -64,9 +63,6 @@ const Dashboard = ({ panelSettings, currentMode }) => {
 
   const enabledPanels = panelOrder.filter(id => panelSettings[id] !== false)
 
-  // Separate hero panels from regular panels
-  const heroPanelIds = HERO_PANELS.filter(id => enabledPanels.includes(id))
-
   // Get panels for current command mode
   const modePanels = currentMode && COMMAND_MODES[currentMode]
     ? COMMAND_MODES[currentMode].panels
@@ -94,8 +90,6 @@ const Dashboard = ({ panelSettings, currentMode }) => {
         return <NewsPanel feeds={NEWS_FEEDS.tech} title="Technology / AI" />
       case 'finance':
         return <NewsPanel feeds={NEWS_FEEDS.finance} title="Financial" />
-      case 'gov':
-        return <NewsPanel feeds={NEWS_FEEDS.gov} title="Government / Policy" />
       case 'startups':
         return <StartupsPanel />
       case 'vc':
@@ -104,10 +98,6 @@ const Dashboard = ({ panelSettings, currentMode }) => {
         return <BlockchainPanel />
       case 'warwatch':
         return <WarWatchPanel />
-      case 'goodnews':
-        return <GoodNewsPanel />
-      case 'ai':
-        return <AIRacePanel />
       case 'layoffs':
         return <LayoffsPanel />
       default:
@@ -128,80 +118,63 @@ const Dashboard = ({ panelSettings, currentMode }) => {
         </ErrorBoundary>
       </div>
 
-      {/* Hero Section - Featured Panel + Events Sidebar */}
-      <section className="hero-section">
-        {/* Featured Panel */}
-        <div className="hero-featured">
-          <Panel
-            id="politics"
-            title={PANELS.politics?.name || 'World / Geopolitical'}
-            draggable={false}
-          >
-            <ErrorBoundary>
-              {getPanelContent('politics')}
-            </ErrorBoundary>
-          </Panel>
+      {/* Main scrollable content */}
+      <div className="dashboard-content">
+        {/* Hero Section - Featured Panels */}
+        <section className="hero-section">
+          {/* Featured Panels */}
+          <div className="hero-featured">
+            {HERO_PANELS.map(panelId => (
+              <Panel
+                key={panelId}
+                id={panelId}
+                title={PANELS[panelId]?.name || panelId}
+                draggable={false}
+              >
+                <ErrorBoundary>
+                  {getPanelContent(panelId)}
+                </ErrorBoundary>
+              </Panel>
+            ))}
+          </div>
+        </section>
+
+        {/* Category Tabs */}
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+        />
+
+        {/* Filtered panels grid - 3 columns */}
+        <div className="news-grid">
+          {filteredPanels.map(panelId => {
+            const config = PANELS[panelId]
+            if (!config) return null
+
+            return (
+              <Panel
+                key={panelId}
+                id={panelId}
+                title={config.name}
+                draggable={config.draggable}
+                isWide={false}
+                onDragStart={() => handleDragStart(panelId)}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(panelId)}
+              >
+                <ErrorBoundary>
+                  {getPanelContent(panelId)}
+                </ErrorBoundary>
+              </Panel>
+            )
+          })}
         </div>
 
-        {/* Events Sidebar */}
-        <aside className="events-sidebar">
-          <h3 className="events-title">Key Developments</h3>
-          <ul className="events-list">
-            <li className="event-item urgent">
-              <span className="event-badge">LIVE</span>
-              <span className="event-text">Fed Rate Decision</span>
-              <span className="event-time">2:00 PM ET</span>
-            </li>
-            <li className="event-item">
-              <span className="event-badge upcoming">SOON</span>
-              <span className="event-text">Earnings: NVDA, AAPL</span>
-              <span className="event-time">4:00 PM ET</span>
-            </li>
-            <li className="event-item">
-              <span className="event-badge">ONGOING</span>
-              <span className="event-text">Davos Economic Forum</span>
-              <span className="event-time">Day 3</span>
-            </li>
-            <li className="event-item">
-              <span className="event-badge upcoming">TOMORROW</span>
-              <span className="event-text">ECB Policy Meeting</span>
-              <span className="event-time">8:00 AM ET</span>
-            </li>
-          </ul>
-          <a href="#" className="events-link">View Full Calendar</a>
-        </aside>
-      </section>
-
-      {/* Category Tabs */}
-      <CategoryTabs
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
-
-      {/* Filtered panels grid - 3 columns */}
-      <div className="news-grid">
-        {filteredPanels.map(panelId => {
-          const config = PANELS[panelId]
-          if (!config) return null
-
-          return (
-            <Panel
-              key={panelId}
-              id={panelId}
-              title={config.name}
-              draggable={config.draggable}
-              isWide={false}
-              onDragStart={() => handleDragStart(panelId)}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop(panelId)}
-            >
-              <ErrorBoundary>
-                {getPanelContent(panelId)}
-              </ErrorBoundary>
-            </Panel>
-          )
-        })}
+        {/* Developer Activity Section */}
+        <ErrorBoundary>
+          <DeveloperActivity />
+        </ErrorBoundary>
       </div>
     </main>
   )

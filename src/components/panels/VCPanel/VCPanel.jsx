@@ -41,23 +41,6 @@ const VCPanel = () => {
                 </div>
             </div>
 
-            <div className="vc-section-title">RECENT FUNDS (2025-26)</div>
-            <div className="vc-list-container">
-                {RECENT_FUNDS.map((item, idx) => (
-                    <div key={idx} className="vc-list-row">
-                        <div className="vc-row-main">
-                            <span className="vc-row-name">{item.firm}</span>
-                            <span className="vc-row-round">{item.fund}</span>
-                        </div>
-                        <div className="vc-row-meta">
-                            <span className="vc-row-date">{item.date}</span>
-                            <span className="vc-row-amount green">+{formatAmount(item.amount)}</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="vc-section-title">NEWS WIRE</div>
             <div className="vc-news-container">
                 {loading && vcNews.length === 0 ? (
                     <div className="loading-msg">Loading VC news...</div>

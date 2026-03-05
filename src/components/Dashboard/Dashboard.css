@@ -11,16 +11,26 @@
     flex-shrink: 0;
 }
 
-/* Hero Section - Featured Panel + Events Sidebar */
+/* Main scrollable content area */
+.dashboard-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 1.5rem 1.5rem;
+}
+
+/* Hero Section - Featured Panels */
 .hero-section {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
-    padding: 1.5rem 1.5rem 0;
+    margin-bottom: 1.5rem;
 }
 
 .hero-featured .panel {
-    height: 320px;
+    height: 450px;
+}
+
+.hero-featured {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
 /* Events Sidebar */
@@ -31,6 +41,7 @@
     padding: 1rem;
     display: flex;
     flex-direction: column;
+    height: 450px;
 }
 
 .events-title {
@@ -128,6 +139,13 @@
     align-content: start;
 }
 
+/* Make startups, vc, and layoffs panels taller */
+.news-grid .panel[data-panel="startups"],
+.news-grid .panel[data-panel="vc"],
+.news-grid .panel[data-panel="layoffs"] {
+    height: 650px;
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -142,19 +160,20 @@
 /* 2 columns on medium screens */
 @media (max-width: 1400px) {
     .hero-section {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
-    
-    .hero-featured .panel {
-        height: 280px;
-    }
-    
+
+    .hero-featured .panel,
     .events-sidebar {
-        display: none;
+        height: 400px;
     }
-    
+
     .news-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-content {
+        padding: 0 1rem 1rem;
     }
 }
 
@@ -165,10 +184,19 @@
         padding: 1rem;
         gap: 0.75rem;
     }
-    
+
     .hero-section {
-        padding: 1rem 1rem 0;
         gap: 0.75rem;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .hero-featured .panel,
+    .events-sidebar {
+        height: 350px;
+    }
+
+    .dashboard-content {
+        padding: 0 1rem 1rem;
     }
 }
 
@@ -178,12 +206,18 @@
         grid-template-columns: 1fr;
         padding: 0.75rem;
     }
-    
+
     .hero-section {
-        padding: 0.75rem 0.75rem 0;
+        gap: 0.75rem;
+        grid-template-columns: 1fr;
     }
-    
-    .hero-section .panel {
-        height: 350px;
+
+    .hero-featured .panel,
+    .events-sidebar {
+        height: 400px;
+    }
+
+    .dashboard-content {
+        padding: 0 0.75rem 0.75rem;
     }
 }

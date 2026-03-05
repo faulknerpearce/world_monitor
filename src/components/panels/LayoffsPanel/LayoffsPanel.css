@@ -36,7 +36,7 @@
 .layoffs-section-title {
     font-size: 0.65rem;
     font-weight: 700;
-    color: var(--text-dim);
+    color: var(--red);
     background: rgba(255, 255, 255, 0.03);
     padding: 0.3rem 0.5rem;
     margin-top: 2px;
@@ -108,7 +108,7 @@
 
 .layoff-news-source {
     font-size: 0.7rem;
-    color: var(--text-dim);
+    color: var(--red);
     text-transform: uppercase;
     font-weight: 600;
 }
@@ -120,7 +120,7 @@
 
 .layoff-news-title {
     font-size: 0.85rem;
-    color: var(--text-primary);
+    color: #fff;
     line-height: 1.4;
     font-weight: 500;
     display: -webkit-box;

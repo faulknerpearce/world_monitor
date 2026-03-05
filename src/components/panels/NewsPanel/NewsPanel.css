@@ -174,7 +174,7 @@
 }
 
 .item-source {
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -184,7 +184,7 @@
 .item-title {
   display: block;
   color: var(--text-primary);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1.45;
   text-decoration: none;
   font-weight: 400;
@@ -196,7 +196,7 @@
 }
 
 .item-time {
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
   margin-top: 0.25rem;
   font-family: var(--font-mono);
