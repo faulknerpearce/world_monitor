@@ -3,28 +3,12 @@ import { getTimeAgo } from '@core/utils/dateHelpers'
 import './ArticleModal.css'
 
 /**
- * Remove script tags, event-handler attributes, and other dangerous nodes
- * from an HTML string using the browser's own DOMParser.
+ * Extract plain text from an HTML string using the browser's own DOMParser.
+ * No markup ever reaches the DOM — completely safe against XSS.
  */
-const sanitizeHTML = (html) => {
+const htmlToPlainText = (html) => {
   const doc = new DOMParser().parseFromString(html, 'text/html')
-  doc.querySelectorAll('script, style, iframe, object, embed, form').forEach(el => el.remove())
-  doc.querySelectorAll('*').forEach(el => {
-    Array.from(el.attributes).forEach(attr => {
-      if (attr.name.startsWith('on') || attr.name === 'srcdoc') {
-        el.removeAttribute(attr.name)
-        return
-      }
-      // Strip dangerous URL schemes from href/src/action attributes
-      if (['href', 'src', 'action', 'data'].includes(attr.name)) {
-        const val = attr.value.trim().toLowerCase()
-        if (val.startsWith('javascript:') || val.startsWith('data:') || val.startsWith('vbscript:')) {
-          el.removeAttribute(attr.name)
-        }
-      }
-    })
-  })
-  return doc.body.innerHTML
+  return doc.body.textContent?.trim() || ''
 }
 
 const ArticleModal = ({ article, onClose }) => {
@@ -50,9 +34,10 @@ const ArticleModal = ({ article, onClose }) => {
 
   if (!article) return null
 
-  // Prefer full content (content:encoded) over the shorter description
+  // Prefer the fuller content:encoded text over the shorter description excerpt.
+  // Either way, strip all HTML tags — only plain text is ever rendered.
   const rawHTML = article.content || article.description || ''
-  const safeHTML = rawHTML ? sanitizeHTML(rawHTML) : ''
+  const plainText = rawHTML ? htmlToPlainText(rawHTML) : ''
 
   return (
     <div
@@ -82,13 +67,10 @@ const ArticleModal = ({ article, onClose }) => {
             {article.title}
           </h2>
 
-          {safeHTML ? (
-            <div
-              className="article-content"
-              dangerouslySetInnerHTML={{ __html: safeHTML }}
-            />
+          {plainText ? (
+            <p className="article-description">{plainText}</p>
           ) : (
-            <p className="article-content article-content--empty">
+            <p className="article-description article-description--empty">
               No preview available. Visit the source to read the full article.
             </p>
           )}
