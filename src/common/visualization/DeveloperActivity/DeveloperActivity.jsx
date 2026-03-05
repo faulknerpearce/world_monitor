@@ -7,12 +7,15 @@ const CHAIN_CONFIGS = {
     ethereum: {
         name: 'Ethereum',
         color: '#627eea',
-        repos: ['ethereum/go-ethereum', 'ethereum/solidity', 'ethereum/EIPs', 'ethereum/consensus-specs'],
+        // go-ethereum (main client), solidity (compiler), web3.py and py-evm are
+        // active code repos that give a more representative commit signal than
+        // the spec/text-heavy EIPs and consensus-specs repositories.
+        repos: ['ethereum/go-ethereum', 'ethereum/solidity', 'ethereum/web3.py', 'ethereum/py-evm'],
     },
     cardano: {
         name: 'Cardano',
         color: '#0d6efd',
-        repos: ['input-output-hk/cardano-node', 'input-output-hk/plutus', 'IntersectMBO/cardano-ledger'],
+        repos: ['IntersectMBO/cardano-node', 'input-output-hk/plutus', 'IntersectMBO/cardano-ledger'],
     },
     avalanche: {
         name: 'Avalanche',
