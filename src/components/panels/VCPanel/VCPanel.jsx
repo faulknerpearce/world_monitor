@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { VCFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
 import { formatAmount, getTimeAgo } from '@utils'
 import './VCPanel.css'
 
@@ -23,26 +23,10 @@ const VC_STATS = {
 }
 
 const VCPanel = () => {
-    const [vcNews, setVcNews] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        loadData()
-        const interval = setInterval(loadData, 10 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const loadData = async () => {
-        setLoading(true)
-        try {
-            const newsItems = await VCFeedService.fetchVCNews(10)
-            setVcNews(newsItems)
-        } catch (e) {
-            console.error('Failed to fetch VC news:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: vcNews, loading } = useFeedData(
+        () => VCFeedService.fetchVCNews(10),
+        10 * 60 * 1000
+    )
 
     return (
         <div className="vc-panel">

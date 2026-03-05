@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { AIRaceFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './AIRacePanel.css'
 
@@ -7,26 +7,10 @@ import './AIRacePanel.css'
 const AI_PLAYERS = AIRaceFeedService.AI_PLAYERS
 
 const AIRacePanel = () => {
-    const [news, setNews] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        fetchNews()
-        const interval = setInterval(fetchNews, 10 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const fetchNews = async () => {
-        try {
-            setLoading(true)
-            const items = await AIRaceFeedService.fetchAINews(10)
-            setNews(items)
-        } catch (e) {
-            console.error('AI news fetch error:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: news, loading } = useFeedData(
+        () => AIRaceFeedService.fetchAINews(10),
+        10 * 60 * 1000
+    )
 
     return (
         <div className="ai-panel">

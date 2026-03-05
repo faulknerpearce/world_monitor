@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { GoodNewsFeedService } from '@services/feeds'
+import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './GoodNewsPanel.css'
 
@@ -11,26 +11,10 @@ const POSITIVE_STATS = [
 ]
 
 const GoodNewsPanel = () => {
-    const [news, setNews] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        fetchNews()
-        const interval = setInterval(fetchNews, 10 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const fetchNews = async () => {
-        try {
-            setLoading(true)
-            const items = await GoodNewsFeedService.fetchGoodNews(12)
-            setNews(items)
-        } catch (e) {
-            console.error('Good news fetch error:', e)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: news, loading } = useFeedData(
+        () => GoodNewsFeedService.fetchGoodNews(12),
+        10 * 60 * 1000
+    )
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading good news...</div>
