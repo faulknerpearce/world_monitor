@@ -82,7 +82,18 @@ export const parseRSS = (xmlText) => {
     const link = item.querySelector('link')?.textContent || 
                  item.querySelector('link')?.getAttribute('href') || '#'
     const pubDate = item.querySelector('pubDate, published, updated')?.textContent || ''
-    const description = item.querySelector('description, summary, content')?.textContent || ''
+    const description = item.querySelector('description, summary')?.textContent || ''
+
+    // content:encoded holds the full article HTML in many RSS 2.0 feeds.
+    // We try the namespaced element first (content:encoded), then the
+    // namespace-URI variant, and finally the bare <content> Atom element.
+    // This is intentionally separate from `description` above so the two
+    // fields stay independent; `content` is preferred in the modal when present.
+    const contentEncoded =
+      item.getElementsByTagName('content:encoded')[0]?.textContent ||
+      item.getElementsByTagNameNS('http://purl.org/rss/1.0/modules/content/', 'encoded')[0]?.textContent ||
+      item.getElementsByTagName('content')[0]?.textContent ||
+      ''
 
     const dateObj = new Date(pubDate || Date.now())
     const isValidDate = !isNaN(dateObj.getTime())
@@ -93,6 +104,7 @@ export const parseRSS = (xmlText) => {
       pubDate: pubDate, // Return original string
       date: isValidDate ? dateObj : new Date(),
       description: description.trim(),
+      content: contentEncoded.trim(),
       pubDateStr: isValidDate ? dateObj.toISOString() : new Date().toISOString()
     }
   }).filter(item => item.title && item.link)
