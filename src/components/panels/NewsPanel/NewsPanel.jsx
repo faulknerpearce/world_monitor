@@ -2,12 +2,14 @@ import { useEffect, useState, useContext } from 'react'
 import { BaseFeedService } from '@services/feeds'
 import { RefreshContext } from '@context/RefreshContext'
 import { getTimeAgo } from '@utils/dateHelpers'
+import ArticleModal from './ArticleModal'
 import './NewsPanel.css'
 
 const NewsPanel = ({ feeds, title }) => {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedArticle, setSelectedArticle] = useState(null)
   const { refreshKey } = useContext(RefreshContext)
 
   useEffect(() => {
@@ -85,15 +87,23 @@ const NewsPanel = ({ feeds, title }) => {
 
       <div className="news-list">
         {news.map((item, idx) => (
-          <div key={idx} className="item">
+          <div
+            key={idx}
+            className="item"
+            onClick={() => setSelectedArticle(item)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelectedArticle(item)}
+            aria-label={`Read article: ${item.title}`}
+          >
             <div className="item-source">{item.source}</div>
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="item-title">
-              {item.title}
-            </a>
+            <span className="item-title">{item.title}</span>
             <div className="item-time">{getTimeAgo(item.date)}</div>
           </div>
         ))}
       </div>
+
+      <ArticleModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />
     </div>
   )
 }
