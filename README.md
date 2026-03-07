@@ -50,56 +50,74 @@ npm run build
 
 ```
 src/
-├── components/
-│   ├── CategoryTabs/     # Panel category filter tabs
-│   ├── CommandModal/     # Focus-mode selector (Founder / Markets / Intel / Signal)
-│   ├── Dashboard/        # Main layout – panel grid, drag-and-drop, hero section
-│   ├── ErrorBoundary/    # React error boundary wrapper
-│   ├── GlobalMap/        # Interactive D3 world map with hotspot markers
-│   ├── Navbar/           # Top navigation bar with live clock
-│   ├── SettingsModal/    # Theme & panel-visibility settings
-│   ├── TickerStrip/      # Scrolling live market ticker
-│   └── panels/           # Individual panel implementations
-│       ├── AIRacePanel/      # AI company news feed
-│       ├── BlockchainPanel/  # Crypto news + on-chain metrics
-│       ├── GoodNewsPanel/    # Positive news feed
-│       ├── HeatmapPanel/     # Sector performance heatmap
-│       ├── LayoffsPanel/     # Tech layoffs tracker
-│       ├── MarketsPanel/     # Stock & crypto prices
-│       ├── NewsPanel/        # General RSS news panel (reusable)
-│       ├── Panel/            # Shared panel chrome (header, collapse, drag)
-│       ├── StartupsPanel/    # Startup funding rounds
-│       ├── VCPanel/          # VC fund activity
-│       └── WarWatchPanel/    # Defence & conflict news
+├── App.jsx                 # Main app with routing
+├── App.css
+├── rootProviders.jsx       # Root providers (Theme, Refresh)
+├── index.js                # Barrel exports
+│
+├── components/             # Shared/reusable components
+│   ├── feedback/ErrorBoundary/
+│   ├── layout/
+│   │   ├── CategoryTabs/
+│   │   ├── CommandModal/
+│   │   ├── Navbar/
+│   │   └── SettingsModal/
+│   ├── ui/
+│   │   ├── NewsWireFeed/
+│   │   └── Panel/
+│   └── visualization/
+│       └── DeveloperActivity/
+│
 ├── config/
-│   ├── panels.js         # Panel definitions, categories, and priorities
-│   ├── regions.js        # Geographic hotspots and conflict-zone keywords
-│   └── themes.js         # 13 colour themes (CSS variable maps)
+│   ├── panels.js           # Panel definitions, categories
+│   ├── regions.js          # Geographic hotspots
+│   └── themes.js           # 13 colour themes
+│
 ├── context/
-│   ├── RefreshContext.jsx  # Global refresh counter + cache-clearing trigger
-│   └── ThemeContext.jsx    # Active theme state and CSS variable injection
+│   ├── RefreshContext.jsx  # Global refresh counter
+│   └── ThemeContext.jsx    # Active theme state
+│
 ├── hooks/
-│   ├── useDynamicRegions.js  # Periodic geopolitical severity scoring from news
-│   ├── useFeedData.js        # Shared polling hook for all RSS feed panels
-│   ├── useLocalStorage.js    # Generic localStorage state hook
+│   ├── useDynamicRegions.js  # Geopolitical severity scoring
+│   ├── useFeedData.js        # Shared polling hook for feeds
+│   ├── useLocalStorage.js    # localStorage state hook
 │   └── usePanelSettings.js   # Panel visibility preferences
-├── services/
-│   └── feeds/
-│       ├── baseFeedService.js      # Core RSS fetch + parse logic
-│       ├── feedConfig.js           # Centralised RSS feed URL registry
-│       ├── aiRaceFeedService.js    # AI news feed (with player list)
-│       ├── blockchainFeedService.js
-│       ├── goodNewsFeedService.js
-│       ├── layoffsFeedService.js
-│       ├── mapFeedService.js       # Intel + politics feeds for the global map
-│       ├── newsFeedService.js
-│       ├── startupsFeedService.js  # Funding-keyword extraction
-│       ├── vcFeedService.js
-│       └── warWatchFeedService.js
-└── utils/
-    ├── dateHelpers.js    # getTimeAgo() relative-time formatter
-    ├── fetchUtils.js     # CORS-proxy fetch with 5-minute RSS cache
-    └── helpers.js        # Number / percentage / text formatters
+│
+├── services/               # All services flattened
+│   ├── baseFeedService.js  # Core RSS fetch/parse
+│   ├── feedConfig.js       # RSS feed URL registry
+│   ├── mapFeedService.js   # Map data feeds
+│   ├── chainStats.js       # Blockchain metrics
+│   ├── githubActivity.js   # GitHub stats
+│   └── newsFeedService.js  # News RSS service
+│
+├── utils/
+│   ├── dateHelpers.js      # Time formatters
+│   ├── fetchUtils.js       # CORS-proxy fetch
+│   └── helpers.js          # Number/text formatters
+│
+├── features/               # Main pages ONLY
+│   ├── dashboard/
+│   │   ├── Dashboard.jsx   # Dashboard page
+│   │   └── index.js
+│   └── map/
+│       ├── Map.jsx         # Map page
+│       └── components/
+│           └── GlobalMap/
+│
+└── feeds/                  # All 11 feed panels (flattened)
+    ├── ai-race/
+    │   ├── AiRacePanel.jsx
+    │   └── aiRaceFeedService.js
+    ├── blockchain/
+    ├── good-news/
+    ├── heatmap/
+    ├── layoffs/
+    ├── markets/            # Includes TickerStrip
+    ├── news/
+    ├── startups/
+    ├── vc-activity/
+    └── war-watch/
 ```
 
 ## Architecture Notes
