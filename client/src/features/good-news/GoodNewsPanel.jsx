@@ -1,4 +1,4 @@
-import { GoodNewsFeedService } from './goodNewsFeedService'
+import { createFeedFetcher } from '@services/createFeedFetcher'
 import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './GoodNewsPanel.css'
@@ -10,11 +10,10 @@ const POSITIVE_STATS = [
     { label: 'Child Mortality', value: '-59%', detail: 'since 1990' },
 ]
 
+const fetchGoodNews = createFeedFetcher('goodNews', 12)
+
 const GoodNewsPanel = () => {
-    const { data: news, loading } = useFeedData(
-        () => GoodNewsFeedService.fetchGoodNews(12),
-        10 * 60 * 1000
-    )
+    const { data: news, loading } = useFeedData(fetchGoodNews, 10 * 60 * 1000)
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading good news...</div>

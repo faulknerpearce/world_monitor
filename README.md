@@ -64,7 +64,7 @@ world_monitor/
 │   │   │   └── index.css              # Global styles
 │   │   │
 │   │   ├── config/                    # App configuration
-│   │   │   ├── panels.js              # Panel definitions, categories
+│   │   │   ├── panels.js              # Panel definitions, categories, command modes
 │   │   │   ├── regions.js             # Geographic hotspots
 │   │   │   └── themes.js              # 13 colour themes
 │   │   │
@@ -72,15 +72,16 @@ world_monitor/
 │   │   │   ├── RefreshContext.jsx      # Global refresh counter
 │   │   │   └── ThemeContext.jsx        # Active theme state
 │   │   │
-│   │   ├── features/                  # Feature-based modules
+│   │   ├── features/                  # Feature-based modules (co-located)
 │   │   │   ├── ai-race/               # AI company news feed
 │   │   │   ├── blockchain/            # Crypto news + on-chain metrics
-│   │   │   ├── dashboard/             # Main dashboard page
+│   │   │   ├── dashboard/             # Dashboard page + Panel, ErrorBoundary, CategoryTabs
 │   │   │   ├── good-news/             # Positive news feed
 │   │   │   ├── heatmap/               # Sector performance heatmap
 │   │   │   ├── layoffs/               # Tech layoffs tracker
-│   │   │   ├── map/                   # Interactive global map
-│   │   │   ├── markets/               # Stock & crypto prices (+ TickerStrip)
+│   │   │   ├── map/                   # Interactive global map + GlobalMap, HotspotModal
+│   │   │   ├── markets/               # Stock & crypto prices + TickerStrip
+│   │   │   ├── navigation/            # Navbar, CommandModal, SettingsModal
 │   │   │   ├── news/                  # General RSS news panel
 │   │   │   ├── startups/              # Startup funding rounds
 │   │   │   ├── vc-activity/           # VC fund activity
@@ -94,17 +95,11 @@ world_monitor/
 │   │   │
 │   │   ├── services/                  # Data fetching services
 │   │   │   ├── baseFeedService.js     # Core RSS fetch/parse
+│   │   │   ├── createFeedFetcher.js   # Factory for simple feed fetchers
 │   │   │   ├── feedConfig.js          # RSS feed URL registry
 │   │   │   ├── mapFeedService.js      # Map data feeds
 │   │   │   ├── chainStats.js          # Blockchain metrics
-│   │   │   ├── githubActivity.js      # GitHub stats
-│   │   │   └── newsFeedService.js     # News RSS service
-│   │   │
-│   │   ├── shared/                    # Reusable shared components
-│   │   │   ├── feedback/              # Error boundaries
-│   │   │   ├── layout/                # Navbar, modals, tabs
-│   │   │   ├── ui/                    # Panel chrome, news wire
-│   │   │   └── visualization/         # Developer activity chart
+│   │   │   └── githubActivity.js      # GitHub stats
 │   │   │
 │   │   └── utils/                     # Utility functions
 │   │       ├── dateHelpers.js         # Time formatters

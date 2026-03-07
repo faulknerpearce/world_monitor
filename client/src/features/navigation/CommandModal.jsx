@@ -1,41 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { COMMAND_MODES } from '@config/panels'
 import './CommandModal.css'
-
-// Command modes configuration
-export const COMMAND_MODES = {
-  founder: {
-    id: 'founder',
-    name: 'FOUNDER',
-    icon: '◆',
-    tagline: 'Build the future',
-    gradient: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-    panels: ['startups', 'vc', 'tech', 'layoffs']
-  },
-  markets: {
-    id: 'markets',
-    name: 'MARKETS',
-    icon: '◇',
-    tagline: 'Follow the money',
-    gradient: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-    panels: ['finance', 'blockchain', 'vc']
-  },
-  intel: {
-    id: 'intel',
-    name: 'INTEL',
-    icon: '◈',
-    tagline: 'Know everything',
-    gradient: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
-    panels: ['politics', 'gov', 'warwatch', 'tech']
-  },
-  signal: {
-    id: 'signal',
-    name: 'SIGNAL',
-    icon: '◉',
-    tagline: 'Cut through noise',
-    gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
-    panels: ['politics', 'finance']
-  }
-}
 
 const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
   const closeButtonRef = useRef(null)

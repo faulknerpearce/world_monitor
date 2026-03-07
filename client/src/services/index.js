@@ -1,5 +1,6 @@
 export { BaseFeedService } from './baseFeedService.js'
 export { FEED_CONFIG, NEWS_FEEDS } from './feedConfig.js'
+export { createFeedFetcher } from './createFeedFetcher.js'
 export { MapFeedService } from './mapFeedService.js'
 export { fetchChainStats, formatTVL, formatCount } from './chainStats.js'
 export { fetchChainActivity } from './githubActivity.js'

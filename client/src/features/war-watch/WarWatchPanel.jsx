@@ -1,4 +1,4 @@
-import { WarWatchFeedService } from './warWatchFeedService'
+import { createFeedFetcher } from '@services/createFeedFetcher'
 import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './WarWatchPanel.css'
@@ -13,11 +13,10 @@ const CONFLICT_ZONES = [
     { region: 'Syria', status: 'ongoing', intensity: 'low' },
 ]
 
+const fetchWarNews = createFeedFetcher('warWatch', 15)
+
 const WarWatchPanel = () => {
-    const { data: news, loading } = useFeedData(
-        () => WarWatchFeedService.fetchWarNews(15),
-        5 * 60 * 1000
-    )
+    const { data: news, loading } = useFeedData(fetchWarNews, 5 * 60 * 1000)
 
     if (loading && news.length === 0) {
         return <div className="loading-msg">Loading conflict data...</div>

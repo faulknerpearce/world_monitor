@@ -1,4 +1,4 @@
-import GlobalMap from './components/GlobalMap/GlobalMap'
+import GlobalMap from './GlobalMap'
 import './Map.css'
 
 const Map = () => {

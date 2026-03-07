@@ -18,7 +18,7 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 │   │   │   └── index.css              # Global styles and font imports
 │   │   │
 │   │   ├── config/                    # App configuration
-│   │   │   ├── panels.js              # Panel definitions and categories
+│   │   │   ├── panels.js              # Panel definitions, categories, command modes
 │   │   │   ├── regions.js             # Geographic hotspots and markers
 │   │   │   └── themes.js              # Color theme definitions
 │   │   │
@@ -28,7 +28,7 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 │   │   │
 │   │   ├── features/                  # Feature-based modules (domain-driven)
 │   │   │   │
-│   │   │   ├── ai-race/              # AI company news feed
+│   │   │   ├── ai-race/               # AI company news feed
 │   │   │   │   ├── AiRacePanel.jsx
 │   │   │   │   ├── AiRacePanel.css
 │   │   │   │   ├── aiRaceFeedService.js
@@ -37,18 +37,24 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 │   │   │   ├── blockchain/            # Crypto news + on-chain metrics
 │   │   │   │   ├── BlockchainPanel.jsx
 │   │   │   │   ├── BlockchainPanel.css
-│   │   │   │   ├── blockchainFeedService.js
 │   │   │   │   └── index.js
 │   │   │   │
 │   │   │   ├── dashboard/             # Main dashboard page
-│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   ├── Dashboard.jsx      # Dashboard page with panel grid
 │   │   │   │   ├── Dashboard.css
+│   │   │   │   ├── Panel.jsx          # Collapsible panel wrapper
+│   │   │   │   ├── Panel.css
+│   │   │   │   ├── CategoryTabs.jsx   # Category filter tabs
+│   │   │   │   ├── CategoryTabs.css
+│   │   │   │   ├── ErrorBoundary.jsx  # Error boundary for panels
+│   │   │   │   ├── ErrorBoundary.css
+│   │   │   │   ├── DeveloperActivity.jsx # Dev activity chart
+│   │   │   │   ├── DeveloperActivity.css
 │   │   │   │   └── index.js
 │   │   │   │
 │   │   │   ├── good-news/             # Positive news feed
 │   │   │   │   ├── GoodNewsPanel.jsx
 │   │   │   │   ├── GoodNewsPanel.css
-│   │   │   │   ├── goodNewsFeedService.js
 │   │   │   │   └── index.js
 │   │   │   │
 │   │   │   ├── heatmap/               # Sector performance heatmap
@@ -63,24 +69,28 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 │   │   │   │   └── index.js
 │   │   │   │
 │   │   │   ├── map/                   # Interactive global map
-│   │   │   │   ├── Map.jsx
+│   │   │   │   ├── Map.jsx            # Map page wrapper
 │   │   │   │   ├── Map.css
-│   │   │   │   ├── index.js
-│   │   │   │   └── components/
-│   │   │   │       └── GlobalMap/
-│   │   │   │           ├── GlobalMap.jsx
-│   │   │   │           ├── GlobalMap.css
-│   │   │   │           └── HotspotModal/
-│   │   │   │               ├── HotspotModal.jsx
-│   │   │   │               └── HotspotModal.css
+│   │   │   │   ├── GlobalMap.jsx      # D3 globe map component
+│   │   │   │   ├── GlobalMap.css
+│   │   │   │   ├── HotspotModal.jsx   # Hotspot detail popup
+│   │   │   │   ├── HotspotModal.css
+│   │   │   │   └── index.js
 │   │   │   │
 │   │   │   ├── markets/               # Stock & crypto prices
 │   │   │   │   ├── MarketsPanel.jsx
 │   │   │   │   ├── MarketsPanel.css
-│   │   │   │   ├── index.js
-│   │   │   │   └── TickerStrip/
-│   │   │   │       ├── TickerStrip.jsx
-│   │   │   │       └── TickerStrip.css
+│   │   │   │   ├── TickerStrip.jsx    # Scrolling ticker strip
+│   │   │   │   ├── TickerStrip.css
+│   │   │   │   └── index.js
+│   │   │   │
+│   │   │   ├── navigation/            # Navigation and app-level modals
+│   │   │   │   ├── Navbar.jsx         # Top navigation bar
+│   │   │   │   ├── Navbar.css
+│   │   │   │   ├── CommandModal.jsx   # Focus mode selector
+│   │   │   │   ├── CommandModal.css
+│   │   │   │   ├── SettingsModal.jsx  # Theme settings
+│   │   │   │   └── SettingsModal.css
 │   │   │   │
 │   │   │   ├── news/                  # General RSS news panel
 │   │   │   │   ├── NewsPanel.jsx
@@ -96,13 +106,11 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 │   │   │   ├── vc-activity/           # VC fund activity
 │   │   │   │   ├── VCPanel.jsx
 │   │   │   │   ├── VCPanel.css
-│   │   │   │   ├── vcFeedService.js
 │   │   │   │   └── index.js
 │   │   │   │
 │   │   │   └── war-watch/             # Defence & conflict news
 │   │   │       ├── WarWatchPanel.jsx
 │   │   │       ├── WarWatchPanel.css
-│   │   │       ├── warWatchFeedService.js
 │   │   │       └── index.js
 │   │   │
 │   │   ├── hooks/                     # Custom React hooks
@@ -115,27 +123,11 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 │   │   ├── services/                  # Data fetching services
 │   │   │   ├── index.js               # Barrel exports
 │   │   │   ├── baseFeedService.js     # Core RSS fetch/parse logic
+│   │   │   ├── createFeedFetcher.js   # Factory for simple feed fetchers
 │   │   │   ├── feedConfig.js          # Centralized RSS feed URL registry
 │   │   │   ├── mapFeedService.js      # Map-specific data feeds
 │   │   │   ├── chainStats.js          # Blockchain on-chain metrics
-│   │   │   ├── githubActivity.js      # GitHub activity stats
-│   │   │   └── newsFeedService.js     # News RSS feed service
-│   │   │
-│   │   ├── shared/                    # Reusable shared components
-│   │   │   ├── feedback/              # Error handling components
-│   │   │   │   └── ErrorBoundary/
-│   │   │   │       ├── ErrorBoundary.jsx
-│   │   │   │       └── ErrorBoundary.css
-│   │   │   ├── layout/                # Layout components
-│   │   │   │   ├── CategoryTabs/
-│   │   │   │   ├── CommandModal/
-│   │   │   │   ├── Navbar/
-│   │   │   │   └── SettingsModal/
-│   │   │   ├── ui/                    # UI primitives
-│   │   │   │   ├── NewsWireFeed/
-│   │   │   │   └── Panel/
-│   │   │   └── visualization/         # Data visualization
-│   │   │       └── DeveloperActivity/
+│   │   │   └── githubActivity.js      # GitHub activity stats
 │   │   │
 │   │   └── utils/                     # Utility functions
 │   │       ├── index.js               # Barrel exports
@@ -161,19 +153,17 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 | Directory | Purpose |
 |-----------|---------|
 | `client/src/app/` | Application bootstrap and routing |
-| `client/src/config/` | Configuration and constants |
+| `client/src/config/` | Configuration, constants, and command modes |
 | `client/src/context/` | React Context providers for global state management |
-| `client/src/features/` | Feature modules organized by domain |
+| `client/src/features/` | Feature modules organized by domain (co-located components) |
 | `client/src/hooks/` | Custom React hooks for reusable logic |
-| `client/src/services/` | Data fetching services |
-| `client/src/shared/` | Reusable UI components across features |
+| `client/src/services/` | Data fetching services and feed factory |
 | `client/src/utils/` | Utility functions |
 
 ## Import Aliases (vite.config.js)
 ```js
 '@'         → src/
 '@app'      → src/app/
-'@shared'   → src/shared/
 '@features' → src/features/
 '@config'   → src/config/
 '@context'  → src/context/
@@ -184,47 +174,30 @@ world_monitor/                         # Root: Real-time monitoring dashboard
 
 ## Architecture Overview
 
-### Pages (features/)
-Two main user-facing pages:
-- **Dashboard** - Main dashboard with panel grid, drag-and-drop, hero section
-- **Map** - Interactive global map with geopolitical hotspots
-
 ### Feature Modules (features/)
-All feature panels organized by domain - each contains:
-- `Panel.jsx` - The panel UI component
-- `Panel.css` - Panel styles
-- `feedService.js` - Data fetching logic (where applicable)
-- `index.js` - Barrel exports
+Each feature is self-contained with its own components, styles, and data logic:
 
-Features:
-- **ai-race** - AI company news feed
+- **ai-race** - AI company news feed (custom keyword filtering)
 - **blockchain** - Crypto news + on-chain metrics
-- **dashboard** - Main dashboard page
+- **dashboard** - Main dashboard page (includes Panel, ErrorBoundary, CategoryTabs, DeveloperActivity)
 - **good-news** - Positive news feed
 - **heatmap** - Sector performance heatmap
 - **layoffs** - Tech layoffs tracker
-- **map** - Interactive global map with geopolitical hotspots
-- **markets** - Stock & crypto prices (+ TickerStrip)
+- **map** - Interactive global map (includes GlobalMap, HotspotModal)
+- **markets** - Stock & crypto prices (includes TickerStrip)
+- **navigation** - Navbar, CommandModal, SettingsModal
 - **news** - General RSS news panel
-- **startups** - Startup funding rounds
+- **startups** - Startup funding rounds (custom funding extraction)
 - **vc-activity** - VC fund activity
 - **war-watch** - Defence & conflict news
 
-### Shared Components (shared/)
-Reusable components used across features:
-- **feedback/** - Error boundaries
-- **layout/** - Navbar, modals, tabs
-- **ui/** - Panel chrome, news wire feed
-- **visualization/** - Developer activity chart
-
 ### Services (services/)
-Data fetching services:
 - **baseFeedService.js** - Core RSS fetch/parse logic
+- **createFeedFetcher.js** - Factory that creates feed fetchers from config keys
 - **feedConfig.js** - Centralized RSS feed URL registry
 - **mapFeedService.js** - Map-specific data feeds
 - **chainStats.js** - Blockchain on-chain metrics
 - **githubActivity.js** - GitHub activity stats
-- **newsFeedService.js** - News RSS feed service
 
 ## Example Imports
 
@@ -232,11 +205,12 @@ Data fetching services:
 // Import a feature panel
 import { MarketsPanel } from '@features/markets'
 
-// Import a shared component
-import Panel from '@shared/ui/Panel/Panel'
+// Import a co-located component
+import Panel from './Panel'
 
-// Import a service
-import { BaseFeedService } from '@services/baseFeedService'
+// Use the feed factory
+import { createFeedFetcher } from '@services/createFeedFetcher'
+const fetchNews = createFeedFetcher('blockchain', 15)
 
 // Import a hook
 import { useFeedData } from '@hooks/useFeedData'

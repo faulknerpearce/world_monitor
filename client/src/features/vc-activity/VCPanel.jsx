@@ -1,4 +1,4 @@
-import { VCFeedService } from './vcFeedService'
+import { createFeedFetcher } from '@services/createFeedFetcher'
 import { useFeedData } from '@hooks/useFeedData'
 import { formatAmount, getTimeAgo } from '@utils'
 import './VCPanel.css'
@@ -22,11 +22,10 @@ const VC_STATS = {
     funds: 42, // Number of funds closed
 }
 
+const fetchVCNews = createFeedFetcher('vc', 10)
+
 const VCPanel = () => {
-    const { data: vcNews, loading } = useFeedData(
-        () => VCFeedService.fetchVCNews(10),
-        10 * 60 * 1000
-    )
+    const { data: vcNews, loading } = useFeedData(fetchVCNews, 10 * 60 * 1000)
 
     return (
         <div className="vc-panel">

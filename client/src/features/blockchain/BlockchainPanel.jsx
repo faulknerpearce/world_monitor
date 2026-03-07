@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react'
 import { fetchWithProxy } from '@utils/fetchUtils.js'
-import { BlockchainFeedService } from './blockchainFeedService'
+import { createFeedFetcher } from '@services/createFeedFetcher'
 import { useFeedData } from '@hooks/useFeedData'
 import { RefreshContext } from '@context/RefreshContext'
 import { getTimeAgo } from '@utils/dateHelpers'
@@ -14,11 +14,10 @@ const MOCK_CHAIN_DATA = {
     nftVolume: '$12.4M',
 }
 
+const fetchCryptoNews = createFeedFetcher('blockchain', 15)
+
 const BlockchainPanel = () => {
-    const { data: news, loading } = useFeedData(
-        () => BlockchainFeedService.fetchCryptoNews(15),
-        5 * 60 * 1000
-    )
+    const { data: news, loading } = useFeedData(fetchCryptoNews, 5 * 60 * 1000)
     const [chainData, setChainData] = useState(MOCK_CHAIN_DATA)
     const { refreshKey } = useContext(RefreshContext)
 
