@@ -1,0 +1,190 @@
+.ticker-container {
+    width: 100%;
+    background: var(--ticker-bg);
+    border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 20;
+    padding: 0.25rem 0;
+}
+
+/* Fixed position for geo-mode ticker on map page */
+.ticker-container.geo-mode {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--accent);
+    border-bottom: none;
+    background: linear-gradient(to bottom, rgba(10, 20, 15, 0.95), rgba(5, 10, 8, 0.98));
+    z-index: 50;
+}
+
+.ticker-container.ticker-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ticker-loading-text {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* Single unified ticker strip */
+.ticker-strip {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Minimal fade edges */
+.ticker-strip::before,
+.ticker-strip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.ticker-strip::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--ticker-fade) 0%, transparent 100%);
+}
+
+.ticker-strip::after {
+    right: 0;
+    background: linear-gradient(90deg, transparent 0%, var(--ticker-fade) 100%);
+}
+
+/* Clean ticker track */
+.ticker-track {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.4rem 0;
+    animation: ticker-scroll 50s linear infinite;
+    width: max-content;
+}
+
+.ticker-container.paused .ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.ticker-track.reverse {
+    animation: ticker-scroll-reverse 45s linear infinite;
+}
+
+@keyframes ticker-scroll-reverse {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+/* Minimal ticker item */
+.ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+    padding: 0.2rem 0;
+    transition: opacity 0.2s ease;
+}
+
+.ticker-item:hover {
+    opacity: 0.7;
+}
+
+/* Type accents - subtle left border */
+.ticker-item.index .ticker-name { color: #818cf8; }
+.ticker-item.crypto .ticker-name { color: #fbbf24; }
+.ticker-item.sector .ticker-name { color: #a78bfa; }
+.ticker-item.commodity .ticker-name { color: #34d399; }
+
+/* Clean typography */
+.ticker-name {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.ticker-price {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.ticker-change {
+    font-size: 0.65rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.ticker-change.up {
+    color: #10b981;
+}
+
+.ticker-change.down {
+    color: #ef4444;
+}
+
+/* Subtle row dividers */
+.ticker-strip.crypto-strip {
+    border-top: 1px solid rgba(245, 158, 11, 0.05);
+}
+
+.ticker-strip.commodity-strip {
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Geo-Alpha Mode */
+.ticker-container.geo-mode {
+  border-top: 1px solid var(--accent);
+  background: linear-gradient(to bottom, rgba(10, 20, 15, 0.95), rgba(5, 10, 8, 0.98));
+}
+
+.ticker-container.geo-mode .ticker-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0 0.8rem;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+  letter-spacing: 1px;
+  box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .ticker-track {
+        gap: 1rem;
+        animation-duration: 35s;
+    }
+
+    .ticker-name { font-size: 0.6rem; }
+    .ticker-price { font-size: 0.65rem; }
+    .ticker-change { font-size: 0.6rem; }
+
+    .ticker-strip::before,
+    .ticker-strip::after {
+        width: 20px;
+    }
+}
