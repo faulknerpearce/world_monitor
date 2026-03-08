@@ -12,6 +12,7 @@ import LayoffsPanel from '@features/layoffs/LayoffsPanel'
 import DeveloperActivity from './DeveloperActivity'
 import CategoryTabs from './CategoryTabs'
 import TickerStrip from '@features/markets/TickerStrip'
+import { useI18n } from '@context/I18nContext'
 
 import './Dashboard.css'
 
@@ -19,6 +20,7 @@ import './Dashboard.css'
 const HERO_PANELS = ['politics', 'blockchain']
 
 const Dashboard = ({ panelSettings, currentMode }) => {
+  const { t } = useI18n()
   const [draggedPanel, setDraggedPanel] = useState(null)
   const [activeCategory, setActiveCategory] = useState('all')
   const [panelOrder, setPanelOrder] = useState(() => {
@@ -84,11 +86,11 @@ const Dashboard = ({ panelSettings, currentMode }) => {
   const getPanelContent = (panelId) => {
     switch (panelId) {
       case 'politics':
-        return <NewsPanel feeds={NEWS_FEEDS.politics} title="World / Geopolitical" />
+        return <NewsPanel feeds={NEWS_FEEDS.politics} panelId="politics" />
       case 'tech':
-        return <NewsPanel feeds={NEWS_FEEDS.tech} title="Technology / AI" />
+        return <NewsPanel feeds={NEWS_FEEDS.tech} panelId="tech" />
       case 'finance':
-        return <NewsPanel feeds={NEWS_FEEDS.finance} title="Financial" />
+        return <NewsPanel feeds={NEWS_FEEDS.finance} panelId="finance" />
       case 'startups':
         return <StartupsPanel />
       case 'vc':
@@ -102,7 +104,7 @@ const Dashboard = ({ panelSettings, currentMode }) => {
       default:
         return (
           <div className="panel-placeholder">
-            Panel content for {PANELS[panelId]?.name} coming soon
+            {t('panel.comingSoon', { name: t(PANELS[panelId]?.nameKey) })}
           </div>
         )
     }
@@ -127,7 +129,7 @@ const Dashboard = ({ panelSettings, currentMode }) => {
               <Panel
                 key={panelId}
                 id={panelId}
-                title={PANELS[panelId]?.name || panelId}
+                title={t(PANELS[panelId]?.nameKey) || panelId}
                 draggable={false}
               >
                 <ErrorBoundary>
@@ -154,7 +156,7 @@ const Dashboard = ({ panelSettings, currentMode }) => {
               <Panel
                 key={panelId}
                 id={panelId}
-                title={config.name}
+                title={t(config.nameKey)}
                 draggable={config.draggable}
                 isWide={false}
                 onDragStart={() => handleDragStart(panelId)}
@@ -180,4 +182,3 @@ const Dashboard = ({ panelSettings, currentMode }) => {
 }
 
 export default Dashboard
-

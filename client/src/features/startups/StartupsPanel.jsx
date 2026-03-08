@@ -1,4 +1,5 @@
 import { StartupsFeedService } from './startupsFeedService'
+import { useI18n } from '@context/I18nContext'
 import { useFeedData } from '@hooks/useFeedData'
 import { formatAmount, getTimeAgo } from '@utils'
 import './StartupsPanel.css'
@@ -18,6 +19,7 @@ const RECENT_FUNDING = [
 ]
 
 const StartupsPanel = () => {
+    const { t, locale } = useI18n()
     const { data: news, loading } = useFeedData(
         () => StartupsFeedService.fetchStartupNews(10),
         10 * 60 * 1000
@@ -30,24 +32,24 @@ const StartupsPanel = () => {
         <div className="startups-panel">
             <div className="startups-header-stats">
                 <div className="stat-item">
-                    <span className="stat-label">Total Raised</span>
+                    <span className="stat-label">{t('startups.totalRaised')}</span>
                     <span className="stat-value green">{formatAmount(totalRaisedVal)}</span>
                 </div>
                 <div className="stat-item">
-                    <span className="stat-label">Deals</span>
+                    <span className="stat-label">{t('startups.deals')}</span>
                     <span className="stat-value">{RECENT_FUNDING.length}</span>
                 </div>
             </div>
 
             <div className="startups-news-container">
                 {loading && news.length === 0 ? (
-                    <div className="loading-msg">Loading startup news...</div>
+                    <div className="loading-msg">{t('startups.loading')}</div>
                 ) : (
                     news.map((item, idx) => (
                         <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer" className="startup-news-item">
                             <div className="startup-news-header">
                                 <span className="startup-news-source">{item.source}</span>
-                                <span className="startup-news-time">{getTimeAgo(item.date)}</span>
+                                <span className="startup-news-time">{getTimeAgo(item.date, locale)}</span>
                             </div>
                             <span className="startup-news-title">{item.title}</span>
                         </a>

@@ -1,4 +1,5 @@
 import { LayoffsFeedService } from './layoffsFeedService'
+import { useI18n } from '@context/I18nContext'
 import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils'
 import { formatCount } from '@services/chainStats'
@@ -25,6 +26,7 @@ const LAYOFF_STATS = {
 }
 
 const LayoffsPanel = () => {
+    const { t, locale } = useI18n()
     const { data: news, loading } = useFeedData(
         () => LayoffsFeedService.fetchLayoffsNews(10),
         15 * 60 * 1000
@@ -34,24 +36,24 @@ const LayoffsPanel = () => {
         <div className="layoffs-panel">
             <div className="layoffs-header-stats">
                 <span className="stat-item">
-                    <span className="stat-label">Total Affected</span>
+                    <span className="stat-label">{t('layoffs.totalAffected')}</span>
                     <span className="stat-value red">{formatCount(LAYOFF_STATS.total2026)}</span>
                 </span>
                 <span className="stat-item">
-                    <span className="stat-label">Events</span>
+                    <span className="stat-label">{t('layoffs.events')}</span>
                     <span className="stat-value">{LAYOFF_STATS.companies}</span>
                 </span>
             </div>
 
             <div className="layoffs-news-container">
                 {loading ? (
-                    <div className="loading-msg">Loading layoff news...</div>
+                    <div className="loading-msg">{t('layoffs.loading')}</div>
                 ) : (
                     news.map((item, idx) => (
                         <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer" className="layoff-news-item">
                             <div className="layoff-news-header">
                                 <span className="layoff-news-source">{item.source}</span>
-                                <span className="layoff-news-time">{getTimeAgo(item.date)}</span>
+                                <span className="layoff-news-time">{getTimeAgo(item.date, locale)}</span>
                             </div>
                             <span className="layoff-news-title">{item.title}</span>
                         </a>

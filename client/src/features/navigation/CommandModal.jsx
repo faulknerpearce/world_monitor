@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { COMMAND_MODES } from '@config/panels'
+import { useI18n } from '@context/I18nContext'
 import './CommandModal.css'
 
 const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
   const closeButtonRef = useRef(null)
+  const { t } = useI18n()
 
   useEffect(() => {
     if (isOpen && closeButtonRef.current) {
@@ -48,13 +50,13 @@ const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
           ref={closeButtonRef}
           className="command-close" 
           onClick={onClose}
-          aria-label="Close command modal"
+          aria-label={t('command.close')}
         >
           ✕
         </button>
         
-        <h2 id="command-modal-title" className="command-title">SELECT MODE</h2>
-        <p className="command-subtitle">Choose your focus. Press 1-4 for quick switch.</p>
+        <h2 id="command-modal-title" className="command-title">{t('command.title')}</h2>
+        <p className="command-subtitle">{t('command.subtitle')}</p>
         
         <div className="mode-grid">
           {Object.values(COMMAND_MODES).map((mode, index) => (
@@ -65,11 +67,11 @@ const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
               style={{ '--mode-gradient': mode.gradient }}
             >
               <div className="mode-icon">{mode.icon}</div>
-              <div className="mode-name">{mode.name}</div>
-              <div className="mode-tagline">{mode.tagline}</div>
+              <div className="mode-name">{t(mode.nameKey)}</div>
+              <div className="mode-tagline">{t(mode.taglineKey)}</div>
               <div className="mode-shortcut">{index + 1}</div>
               {currentMode === mode.id && (
-                <div className="mode-active-indicator">ACTIVE</div>
+                <div className="mode-active-indicator">{t('command.active')}</div>
               )}
             </button>
           ))}
@@ -77,8 +79,8 @@ const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
 
         <div className="command-footer">
           {currentMode 
-            ? <>Focus: <strong>{COMMAND_MODES[currentMode]?.name}</strong> (click to deactivate)</>
-            : <>No focus mode active. Select one to filter panels.</>}
+            ? <>{t('command.focus', { name: t(COMMAND_MODES[currentMode]?.nameKey) })}</>
+            : <>{t('command.noFocus')}</>}
         </div>
       </div>
     </div>

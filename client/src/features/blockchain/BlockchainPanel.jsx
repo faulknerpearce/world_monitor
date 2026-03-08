@@ -3,6 +3,7 @@ import { fetchWithProxy } from '@utils/fetchUtils.js'
 import { createFeedFetcher } from '@services/createFeedFetcher'
 import { useFeedData } from '@hooks/useFeedData'
 import { RefreshContext } from '@context/RefreshContext'
+import { useI18n } from '@context/I18nContext'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './BlockchainPanel.css'
 
@@ -20,6 +21,7 @@ const BlockchainPanel = () => {
     const { data: news, loading } = useFeedData(fetchCryptoNews, 5 * 60 * 1000)
     const [chainData, setChainData] = useState(MOCK_CHAIN_DATA)
     const { refreshKey } = useContext(RefreshContext)
+    const { t, locale } = useI18n()
 
     useEffect(() => {
         let cancelled = false
@@ -85,26 +87,26 @@ const BlockchainPanel = () => {
         }, [refreshKey])
 
     if (loading && news.length === 0) {
-        return <div className="loading-msg">Loading blockchain data...</div>
+        return <div className="loading-msg">{t('blockchain.loading')}</div>
     }
 
     return (
         <div className="blockchain-panel">
             <div className="chain-stats">
                 <div className="chain-stat">
-                    <span className="chain-stat-label">BTC Hashrate</span>
+                    <span className="chain-stat-label">{t('blockchain.btcHashrate')}</span>
                     <span className="chain-stat-value">{chainData.btcHashrate}</span>
                 </div>
                 <div className="chain-stat">
-                    <span className="chain-stat-label">ETH Gas</span>
+                    <span className="chain-stat-label">{t('blockchain.ethGas')}</span>
                     <span className="chain-stat-value">{chainData.ethGas}</span>
                 </div>
                 <div className="chain-stat">
-                    <span className="chain-stat-label">DeFi TVL</span>
+                    <span className="chain-stat-label">{t('blockchain.defiTvl')}</span>
                     <span className="chain-stat-value green">{chainData.defiTvl}</span>
                 </div>
                 <div className="chain-stat">
-                    <span className="chain-stat-label">NFT 24h</span>
+                    <span className="chain-stat-label">{t('blockchain.nft24h')}</span>
                     <span className="chain-stat-value">{chainData.nftVolume}</span>
                 </div>
             </div>
@@ -116,7 +118,7 @@ const BlockchainPanel = () => {
                         <a href={item.link} target="_blank" rel="noopener noreferrer" className="crypto-title">
                             {item.title}
                         </a>
-                        <div className="crypto-time">{getTimeAgo(item.date)}</div>
+                        <div className="crypto-time">{getTimeAgo(item.date, locale)}</div>
                     </div>
                 ))}
             </div>

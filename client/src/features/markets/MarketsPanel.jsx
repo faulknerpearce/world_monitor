@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '@context/I18nContext'
 import { formatNumber, formatPercent } from '@utils'
 import './MarketsPanel.css'
 
@@ -14,6 +15,7 @@ const MARKETS = [
 const MarketsPanel = () => {
   const [markets, setMarkets] = useState({})
   const [loading, setLoading] = useState(true)
+  const { t } = useI18n()
 
   useEffect(() => {
     fetchMarkets()
@@ -54,7 +56,7 @@ const MarketsPanel = () => {
   }
 
   if (loading) {
-    return <div className="loading-msg">Loading markets...</div>
+    return <div className="loading-msg">{t('marketsPanel.loading')}</div>
   }
 
   return (

@@ -7,6 +7,7 @@ import {
 } from '@config/regions.js'
 import { MapFeedService } from '@services/mapFeedService'
 import { useDynamicRegions } from '@hooks/useDynamicRegions'
+import { useI18n } from '@context/I18nContext'
 import HotspotModal from './HotspotModal'
 import TickerStrip from '@features/markets/TickerStrip'
 import './GlobalMap.css'
@@ -15,6 +16,7 @@ const GlobalMap = () => {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const rotationRef = useRef([0, 0]) // Ref to track rotation for drag callbacks
+  const { t, locale } = useI18n()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [mapView, setMapView] = useState('global') // 'global' or 'us'
@@ -30,7 +32,7 @@ const GlobalMap = () => {
   // Calculate quick stats
   const activeConflicts = conflictZones ? conflictZones.length : 0
   const totalIntel = (intelHotspots ? intelHotspots.length : 0) + (hotspots ? Object.keys(hotspots).length : 0)
-  const alertLevel = activeConflicts > 3 ? 'HIGH' : activeConflicts > 0 ? 'ELEVATED' : 'MODERATE'
+  const alertLevel = activeConflicts > 3 ? 'high' : activeConflicts > 0 ? 'elevated' : 'moderate'
 
   // Zoom state
   const [zoomLevel, setZoomLevel] = useState(1)
@@ -94,10 +96,10 @@ const GlobalMap = () => {
       }
     } catch (error) {
       console.error('Error in map render effect:', error)
-      setError('Failed to render map')
+      setError(t('map.failedRender'))
     }
     // Only re-render when essential dependencies change - lastUpdated timestamp handles dynamic data updates
-  }, [worldData, usData, mapView, zoomLevel, translation, rotation, layerVisibility, lastUpdated])
+  }, [worldData, usData, mapView, zoomLevel, translation, rotation, layerVisibility, lastUpdated, t])
 
   const loadMapData = async () => {
     try {
@@ -123,7 +125,7 @@ const GlobalMap = () => {
       setError(null)
     } catch (e) {
       console.error('Failed to load map:', e)
-      setError('Failed to load map data: ' + e.message)
+      setError(t('map.failedLoadData', { message: e.message }))
     } finally {
       setLoading(false)
     }
@@ -138,13 +140,13 @@ const GlobalMap = () => {
       // Additional validation
       if (mapView === 'global' && (!worldData.objects || !worldData.objects.countries)) {
         console.error('Invalid world data structure')
-        setError('Invalid map data format')
+        setError(t('map.invalidData'))
         return
       }
 
       if (mapView === 'us' && (!usData.objects || !usData.objects.states)) {
         console.error('Invalid US data structure')
-        setError('Invalid map data format')
+        setError(t('map.invalidData'))
         return
       }
 
@@ -853,7 +855,7 @@ const GlobalMap = () => {
       })
     } catch (error) {
       console.error('Error rendering map:', error)
-      setError('Failed to render map: ' + error.message)
+      setError(`${t('map.failedRender')}: ${error.message}`)
     }
   }
 
@@ -883,7 +885,7 @@ const GlobalMap = () => {
     // Normalize description field - some use 'desc' instead of 'description'
     const normalizedHotspot = {
       ...hotspot,
-      description: hotspot.description || hotspot.desc || `Monitoring situation in ${hotspot.name}.`,
+      description: hotspot.description || hotspot.desc || t('map.situationDefault', { name: hotspot.name }),
       type: hotspot.type || 'hotspot',
       news: []
     }
@@ -927,7 +929,7 @@ const GlobalMap = () => {
     return (
       <div className="global-map-loading">
         <div className="loading-spinner"></div>
-        <div>Loading map data...</div>
+        <div>{t('map.loadingData')}</div>
       </div>
     )
   }
@@ -938,7 +940,7 @@ const GlobalMap = () => {
         <div className="error-icon">!</div>
         <div>{error}</div>
         <button onClick={loadMapData} style={{ marginTop: '10px', padding: '5px 10px', cursor: 'pointer' }}>
-          Retry
+          {t('common.retry')}
         </button>
       </div>
     )
@@ -948,7 +950,7 @@ const GlobalMap = () => {
   if (mapView === 'global' && !worldData) {
     return (
       <div className="global-map-loading">
-        <div>Loading world map...</div>
+        <div>{t('map.loadingWorld')}</div>
       </div>
     )
   }
@@ -956,7 +958,7 @@ const GlobalMap = () => {
   if (mapView === 'us' && !usData) {
     return (
       <div className="global-map-loading">
-        <div>Loading US map...</div>
+        <div>{t('map.loadingUs')}</div>
       </div>
     )
   }
@@ -966,17 +968,17 @@ const GlobalMap = () => {
       {/* Quick Stats Bar */}
       <div className="map-quick-stats">
         <div className="stat-item">
-          <span className="stat-label">ACTIVE CONFLICTS</span>
+          <span className="stat-label">{t('map.activeConflicts')}</span>
           <span className={`stat-value ${activeConflicts > 2 ? 'critical' : ''}`}>{activeConflicts}</span>
         </div>
         <div className="stat-divider"></div>
         <div className="stat-item">
-          <span className="stat-label">GLOBAL ALERT</span>
-          <span className={`stat-value alert-${alertLevel.toLowerCase()}`}>{alertLevel}</span>
+          <span className="stat-label">{t('map.globalAlert')}</span>
+          <span className={`stat-value alert-${alertLevel}`}>{t(`map.${alertLevel}`)}</span>
         </div>
         <div className="stat-divider"></div>
         <div className="stat-item">
-          <span className="stat-label">INTEL HOTSPOTS</span>
+          <span className="stat-label">{t('map.intelHotspots')}</span>
           <span className="stat-value">{totalIntel > 0 ? totalIntel : '—'}</span>
         </div>
         <div className="stat-divider"></div>
@@ -984,9 +986,9 @@ const GlobalMap = () => {
           <button 
             className={`auto-rotate-btn ${isAutoRotating ? 'active' : ''}`}
             onClick={() => setIsAutoRotating(!isAutoRotating)}
-            title={isAutoRotating ? 'Stop rotation' : 'Start rotation'}
+            title={isAutoRotating ? t('map.stopRotation') : t('map.startRotation')}
           >
-            {isAutoRotating ? 'ROTATING' : 'PAUSED'}
+            {isAutoRotating ? t('map.rotating') : t('map.paused')}
           </button>
         </div>
       </div>
@@ -996,20 +998,20 @@ const GlobalMap = () => {
             className={mapView === 'global' ? 'active' : ''}
             onClick={() => setMapView('global')}
           >
-            GLOBAL
+            {t('map.global')}
           </button>
           <button
             className={mapView === 'us' ? 'active' : ''}
             onClick={() => setMapView('us')}
           >
-            US
+            {t('map.us')}
           </button>
         </div>
         <div className="map-zoom-controls">
-          <button onClick={handleZoomIn} title="Zoom In">+</button>
+          <button onClick={handleZoomIn} title={t('map.zoomIn')}>+</button>
           <div className="zoom-level">{zoomLevel.toFixed(1)}x</div>
-          <button onClick={handleZoomOut} title="Zoom Out">−</button>
-          <button onClick={handleZoomReset} title="Reset">RST</button>
+          <button onClick={handleZoomOut} title={t('map.zoomOut')}>−</button>
+          <button onClick={handleZoomReset} title={t('map.reset')}>RST</button>
         </div>
       </div>
       <div className="map-controls map-controls-left">
@@ -1029,9 +1031,9 @@ const GlobalMap = () => {
                 underseaCables: false,
                 cyberRegions: false
               }))}
-              title="Intel focus - Intelligence hotspots only"
+              title={t('map.presetIntelTitle')}
             >
-              ◈ INTEL
+              {t('map.presetIntel')}
             </button>
             <button
               className={`layer-preset ${layerVisibility.conflictZones && layerVisibility.intelHotspots ? 'active' : ''}`}
@@ -1046,9 +1048,9 @@ const GlobalMap = () => {
                 underseaCables: false,
                 cyberRegions: false
               }))}
-              title="Geopolitical focus - Conflicts and hotspots"
+              title={t('map.presetConflictTitle')}
             >
-              ✕ CONFLICT
+              {t('map.presetConflict')}
             </button>
             <button
               className={`layer-preset ${layerVisibility.shippingChokepoints && layerVisibility.underseaCables ? 'active' : ''}`}
@@ -1063,9 +1065,9 @@ const GlobalMap = () => {
                 underseaCables: true,
                 cyberRegions: false
               }))}
-              title="Trade focus - Shipping routes and infrastructure"
+              title={t('map.presetTradeTitle')}
             >
-              ⚓ TRADE
+              {t('map.presetTrade')}
             </button>
             <button
               className={`layer-preset ${layerVisibility.militaryBases && layerVisibility.nuclearFacilities ? 'active' : ''}`}
@@ -1080,9 +1082,9 @@ const GlobalMap = () => {
                 underseaCables: false,
                 cyberRegions: false
               }))}
-              title="Defense focus - Military and nuclear facilities"
+              title={t('map.presetDefenseTitle')}
             >
-              ▲ DEFENSE
+              {t('map.presetDefense')}
             </button>
           </div>
           
@@ -1091,24 +1093,24 @@ const GlobalMap = () => {
             <button
               className={`layer-toggle ${layerVisibility.intelHotspots ? 'active' : ''}`}
               onClick={() => toggleLayer('intelHotspots')}
-              title="Intelligence Hotspots"
+              title={t('map.intelligenceHotspots')}
             >
-              Intel
+              {t('map.intel')}
             </button>
             <button
               className={`layer-toggle ${layerVisibility.hotspots ? 'active' : ''}`}
               onClick={() => toggleLayer('hotspots')}
-              title="Watch Zones"
+              title={t('map.watchZones')}
             >
-              Watch
+              {t('map.watch')}
             </button>
             {mapView === 'us' && (
               <button
                 className={`layer-toggle ${layerVisibility.usCities ? 'active' : ''}`}
                 onClick={() => toggleLayer('usCities')}
-                title="Major Cities"
+                title={t('map.majorCities')}
               >
-                Cities
+                {t('map.cities')}
               </button>
             )}
           </div>
@@ -1117,44 +1119,44 @@ const GlobalMap = () => {
               <button
                 className={`layer-toggle ${layerVisibility.conflictZones ? 'active' : ''}`}
                 onClick={() => toggleLayer('conflictZones')}
-                title="Active Conflicts"
+                title={t('map.activeConflictsTitle')}
               >
-                Conflict
+                {t('map.conflict')}
               </button>
               <button
                 className={`layer-toggle ${layerVisibility.shippingChokepoints ? 'active' : ''}`}
                 onClick={() => toggleLayer('shippingChokepoints')}
-                title="Shipping Routes"
+                title={t('map.shippingRoutes')}
               >
-                Shipping
+                {t('map.shipping')}
               </button>
               <button
                 className={`layer-toggle ${layerVisibility.militaryBases ? 'active' : ''}`}
                 onClick={() => toggleLayer('militaryBases')}
-                title="Military Bases"
+                title={t('map.militaryBases')}
               >
-                Military
+                {t('map.military')}
               </button>
               <button
                 className={`layer-toggle ${layerVisibility.nuclearFacilities ? 'active' : ''}`}
                 onClick={() => toggleLayer('nuclearFacilities')}
-                title="Nuclear Facilities"
+                title={t('map.nuclearFacilities')}
               >
-                Nuclear
+                {t('map.nuclear')}
               </button>
               <button
                 className={`layer-toggle ${layerVisibility.underseaCables ? 'active' : ''}`}
                 onClick={() => toggleLayer('underseaCables')}
-                title="Undersea Cables"
+                title={t('map.underseaCables')}
               >
-                Infra
+                {t('map.infra')}
               </button>
               <button
                 className={`layer-toggle ${layerVisibility.cyberRegions ? 'active' : ''}`}
                 onClick={() => toggleLayer('cyberRegions')}
-                title="Cyber Regions"
+                title={t('map.cyberRegions')}
               >
-                Cyber
+                {t('map.cyber')}
               </button>
             </div>
           )}
@@ -1162,14 +1164,14 @@ const GlobalMap = () => {
       </div>
       <div className="map-labels">
         <div className="map-label bottom-left">
-          <span className="legend-item"><span className="legend-dot high"></span>HIGH</span>
-          <span className="legend-item"><span className="legend-dot elevated"></span>ELEVATED</span>
-          <span className="legend-item"><span className="legend-dot medium"></span>MEDIUM</span>
+          <span className="legend-item"><span className="legend-dot high"></span>{t('map.high')}</span>
+          <span className="legend-item"><span className="legend-dot elevated"></span>{t('map.elevated')}</span>
+          <span className="legend-item"><span className="legend-dot medium"></span>{t('map.medium')}</span>
         </div>
         <div className="map-label bottom-right">
           <div>{new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</div>
           <div style={{ fontSize: '9px', opacity: 0.7 }}>
-            Updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {t('map.updated', { time: lastUpdated.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) })}
           </div>
         </div>
       </div>

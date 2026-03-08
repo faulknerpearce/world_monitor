@@ -1,14 +1,16 @@
 import { useEffect, useState, useContext } from 'react'
 import { BaseFeedService } from '@services/baseFeedService'
 import { RefreshContext } from '@context/RefreshContext'
+import { useI18n } from '@context/I18nContext'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './NewsPanel.css'
 
-const NewsPanel = ({ feeds, title }) => {
+const NewsPanel = ({ feeds, panelId }) => {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { refreshKey } = useContext(RefreshContext)
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     let cancelled = false
@@ -24,7 +26,7 @@ const NewsPanel = ({ feeds, title }) => {
       } catch (e) {
         console.error('News fetch error:', e)
         if (!cancelled) {
-          setError(`Failed to load news: ${e.message}`)
+          setError(t('news.failed', { message: e.message }))
           setNews([])
         }
       } finally {
@@ -49,17 +51,14 @@ const NewsPanel = ({ feeds, title }) => {
 
   // Get theme class based on panel type
   const getThemeClass = () => {
-    const titleLower = title?.toLowerCase() || ''
-    if (titleLower.includes('politic') || titleLower.includes('geopolitic')) return 'theme-blue'
-    if (titleLower.includes('tech') || titleLower.includes('ai')) return 'theme-cyan'
-    if (titleLower.includes('financ')) return 'theme-green'
-    if (titleLower.includes('gov') || titleLower.includes('policy')) return 'theme-purple'
-    if (titleLower.includes('intel')) return 'theme-red'
+    if (panelId === 'politics' || panelId === 'warwatch') return 'theme-blue'
+    if (panelId === 'tech') return 'theme-cyan'
+    if (panelId === 'finance') return 'theme-green'
     return 'theme-neutral'
   }
 
   if (loading && news.length === 0) {
-    return <div className="loading-msg">Loading news...</div>
+    return <div className="loading-msg">{t('news.loading')}</div>
   }
 
   if (error && news.length === 0) {
@@ -71,15 +70,15 @@ const NewsPanel = ({ feeds, title }) => {
       <div className="news-summary">
         <div className="summary-stat">
           <span className="stat-value">{news.length}</span>
-          <span className="stat-label">Articles</span>
+          <span className="stat-label">{t('news.articles')}</span>
         </div>
         <div className="summary-stat">
           <span className="stat-value">{uniqueSources}</span>
-          <span className="stat-label">Sources</span>
+          <span className="stat-label">{t('news.sources')}</span>
         </div>
         <div className="summary-stat live-indicator">
           <span className="pulse-dot"></span>
-          <span className="stat-label">LIVE</span>
+          <span className="stat-label">{t('common.live')}</span>
         </div>
       </div>
 
@@ -90,7 +89,7 @@ const NewsPanel = ({ feeds, title }) => {
             <a href={item.link} target="_blank" rel="noopener noreferrer" className="item-title">
               {item.title}
             </a>
-            <div className="item-time">{getTimeAgo(item.date)}</div>
+            <div className="item-time">{getTimeAgo(item.date, locale)}</div>
           </div>
         ))}
       </div>
@@ -99,4 +98,3 @@ const NewsPanel = ({ feeds, title }) => {
 }
 
 export default NewsPanel
-

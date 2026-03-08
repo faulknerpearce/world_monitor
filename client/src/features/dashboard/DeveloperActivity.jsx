@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchChainActivity } from '@services/githubActivity'
 import { fetchChainStats, formatTVL, formatCount } from '@services/chainStats'
+import { useI18n } from '@context/I18nContext'
 import './DeveloperActivity.css'
 
 const CHAIN_CONFIGS = {
@@ -24,8 +25,6 @@ const CHAIN_CONFIGS = {
     },
 }
 
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const SHOWN_DAY_LABELS = new Set([1, 3, 5]) // Mon, Wed, Fri
 
 const CELL = 11
@@ -63,14 +62,15 @@ const getCellColor = (level, color) => {
     return hexToRgba(color, alphas[level])
 }
 
-const formatTooltip = (weekTimestamp, dayIndex, count) => {
+const formatTooltip = (weekTimestamp, dayIndex, count, locale, t) => {
     const date = new Date((weekTimestamp + dayIndex * 86400) * 1000)
-    const label = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
-    if (count === 0) return `No commits on ${label}`
-    return `${count} commit${count !== 1 ? 's' : ''} on ${label}`
+    const label = date.toLocaleDateString(locale, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+    if (count === 0) return t('developer.noCommitsOn', { date: label })
+    if (count === 1) return t('developer.oneCommitOn', { date: label })
+    return t('developer.manyCommitsOn', { count, date: label })
 }
 
-const ContributionGraph = ({ weeks, color }) => {
+const ContributionGraph = ({ weeks, color, locale, t }) => {
     const [tooltip, setTooltip] = useState(null)
 
     if (!weeks || weeks.length === 0) return null
@@ -81,11 +81,17 @@ const ContributionGraph = ({ weeks, color }) => {
     const monthLabels = []
     let lastMonth = -1
     weeks.forEach((week, idx) => {
-        const month = new Date(week.week * 1000).getMonth()
+        const date = new Date(week.week * 1000)
+        const month = date.getMonth()
         if (month !== lastMonth) {
-            monthLabels.push({ idx, label: MONTH_NAMES[month] })
+            monthLabels.push({ idx, label: date.toLocaleDateString(locale, { month: 'short' }) })
             lastMonth = month
         }
+    })
+
+    const dayLabels = Array.from({ length: 7 }, (_, d) => {
+        const baseDate = new Date(Date.UTC(2024, 0, 7 + d))
+        return baseDate.toLocaleDateString(locale, { weekday: 'short', timeZone: 'UTC' })
     })
 
     const svgWidth = DAY_LABEL_WIDTH + weeks.length * CELL_TOTAL
@@ -109,7 +115,7 @@ const ContributionGraph = ({ weeks, color }) => {
                     </text>
                 ))}
 
-                {DAY_LABELS.map((label, d) =>
+                {dayLabels.map((label, d) =>
                     SHOWN_DAY_LABELS.has(d) ? (
                         <text
                             key={`d-${d}`}
@@ -141,7 +147,7 @@ const ContributionGraph = ({ weeks, color }) => {
                                     setTooltip({
                                         x: rect.left + rect.width / 2,
                                         y: rect.top,
-                                        text: formatTooltip(week.week, d, count),
+                                        text: formatTooltip(week.week, d, count, locale, t),
                                     })
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
@@ -163,7 +169,7 @@ const ContributionGraph = ({ weeks, color }) => {
     )
 }
 
-const ChainCard = ({ chainKey, stats }) => {
+const ChainCard = ({ chainKey, stats, t, locale }) => {
     const config = CHAIN_CONFIGS[chainKey]
     const chainStats = stats?.[chainKey] ?? null
     const [data, setData] = useState(null)
@@ -192,7 +198,7 @@ const ChainCard = ({ chainKey, stats }) => {
 
     const tvl = chainStats ? formatTVL(chainStats.tvl) : null
     const validators = chainStats ? formatCount(chainStats.validators) : null
-    const validatorLabel = chainStats?.validatorLabel ?? 'validators'
+    const validatorLabel = chainStats?.validatorLabel ?? t('developer.validators')
 
     return (
         <div className="chain-card">
@@ -205,7 +211,7 @@ const ChainCard = ({ chainKey, stats }) => {
             {/* Metrics row */}
             <div className="chain-metrics">
                 <div className="metric">
-                    <span className="metric-label">Commits / yr</span>
+                    <span className="metric-label">{t('developer.commitsPerYear')}</span>
                     <span className="metric-value" style={{ color: config.color }}>
                         {loading ? '...' : data ? data.totalCommits.toLocaleString() : '--'}
                     </span>
@@ -242,15 +248,15 @@ const ChainCard = ({ chainKey, stats }) => {
                 {loading && <div className="graph-skeleton" />}
                 {error && <div className="graph-error">{error}</div>}
                 {!loading && !error && data && (
-                    <ContributionGraph weeks={data.weeks} color={config.color} />
+                    <ContributionGraph weeks={data.weeks} color={config.color} locale={locale} t={t} />
                 )}
                 {!loading && !error && !data && (
-                    <div className="graph-error">Stats unavailable -- GitHub is still computing. Refresh in a moment.</div>
+                    <div className="graph-error">{t('developer.statsUnavailable')}</div>
                 )}
             </div>
 
             <div className="graph-legend">
-                <span className="legend-label">Less</span>
+                <span className="legend-label">{t('developer.less')}</span>
                 <div className="legend-squares">
                     {[0,1,2,3,4].map(level => (
                         <span
@@ -260,7 +266,7 @@ const ChainCard = ({ chainKey, stats }) => {
                         />
                     ))}
                 </div>
-                <span className="legend-label">More</span>
+                <span className="legend-label">{t('developer.more')}</span>
             </div>
         </div>
     )
@@ -268,6 +274,7 @@ const ChainCard = ({ chainKey, stats }) => {
 
 const ChainActivity = () => {
     const [stats, setStats] = useState(null)
+    const { t, locale } = useI18n()
 
     useEffect(() => {
         fetchChainStats()
@@ -278,11 +285,11 @@ const ChainActivity = () => {
     return (
         <div className="chain-activity">
             <div className="chain-activity-header">
-                <span className="chain-activity-title">CHAIN ACTIVITY -- LAST 52 WEEKS</span>
+                <span className="chain-activity-title">{t('developer.title')}</span>
             </div>
             <div className="chain-activity-grid">
                 {Object.keys(CHAIN_CONFIGS).map(key => (
-                    <ChainCard key={key} chainKey={key} stats={stats} />
+                    <ChainCard key={key} chainKey={key} stats={stats} t={t} locale={locale} />
                 ))}
             </div>
         </div>

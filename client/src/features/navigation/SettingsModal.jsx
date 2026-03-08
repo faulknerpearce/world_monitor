@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useTheme } from '@context/ThemeContext'
+import { useI18n } from '@context/I18nContext'
 import './SettingsModal.css'
 
 const SettingsModal = ({ isOpen, onClose }) => {
   const { currentTheme, setCurrentTheme, themes } = useTheme()
+  const { language, languages, setLanguage, t } = useI18n()
   const closeButtonRef = useRef(null)
 
   // Focus trap and escape key handling
@@ -36,19 +38,19 @@ const SettingsModal = ({ isOpen, onClose }) => {
     >
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 id="settings-modal-title">Settings</h2>
+          <h2 id="settings-modal-title">{t('settings.title')}</h2>
           <button 
             ref={closeButtonRef}
             className="modal-close" 
             onClick={onClose}
-            aria-label="Close settings"
+            aria-label={t('settings.close')}
           >
             ✕
           </button>
         </div>
         <div className="modal-body">
           <div className="settings-section">
-            <h3 id="appearance-section">Appearance</h3>
+            <h3 id="appearance-section">{t('settings.appearance')}</h3>
             <div className="theme-grid" role="radiogroup" aria-labelledby="appearance-section">
               {Object.entries(themes).map(([key, theme]) => (
                 <button
@@ -57,7 +59,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                   onClick={() => setCurrentTheme(key)}
                   role="radio"
                   aria-checked={currentTheme === key}
-                  aria-label={`Select ${theme.name} theme`}
+                  aria-label={t('settings.selectTheme', { theme: t(`theme.${key}`) })}
                   style={{
                     backgroundColor: theme.colors['--bg-dark'],
                     borderColor: theme.colors['--border-color']
@@ -69,10 +71,33 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     <div className="preview-swatch" style={{ background: theme.colors['--text-primary'] }}></div>
                   </div>
                   <span className="theme-name" style={{ color: theme.colors['--text-primary'] }}>
-                    {theme.name}
+                    {t(`theme.${key}`)}
                   </span>
                   {currentTheme === key && (
                     <div className="theme-check" style={{ color: theme.colors['--accent'] }} aria-hidden="true">✓</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="settings-section">
+            <h3 id="language-section">{t('settings.language')}</h3>
+            <p>{t('settings.languageHelp')}</p>
+            <div className="theme-grid" role="radiogroup" aria-labelledby="language-section">
+              {languages.map((option) => (
+                <button
+                  key={option.code}
+                  className={`theme-card ${language === option.code ? 'active' : ''}`}
+                  onClick={() => setLanguage(option.code)}
+                  role="radio"
+                  aria-checked={language === option.code}
+                  aria-label={option.nativeLabel}
+                >
+                  <span className="theme-name">
+                    {option.nativeLabel}
+                  </span>
+                  {language === option.code && (
+                    <div className="theme-check" aria-hidden="true">✓</div>
                   )}
                 </button>
               ))}
@@ -85,4 +110,3 @@ const SettingsModal = ({ isOpen, onClose }) => {
 }
 
 export default SettingsModal
-

@@ -7,6 +7,7 @@ import SettingsModal from '@features/navigation/SettingsModal'
 import CommandModal from '@features/navigation/CommandModal'
 import { usePanelSettings } from '@hooks/usePanelSettings'
 import { ThemeProvider } from '@context/ThemeContext'
+import { I18nProvider } from '@context/I18nContext'
 import { RefreshProvider, RefreshContext } from '@context/RefreshContext'
 import './App.css'
 
@@ -61,15 +62,16 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <RefreshProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </RefreshProvider>
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider>
+        <RefreshProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </RefreshProvider>
+      </ThemeProvider>
+    </I18nProvider>
   )
 }
 
 export default App
-

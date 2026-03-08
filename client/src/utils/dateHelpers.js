@@ -1,19 +1,23 @@
-export const getTimeAgo = (date) => {
-  const seconds = Math.floor((new Date() - date) / 1000)
-  const intervals = {
-    y: 31536000,
-    mo: 2592000,
-    w: 604800,
-    d: 86400,
-    h: 3600,
-    m: 60
-  }
+export const getTimeAgo = (date, locale = 'en-US') => {
+  const target = new Date(date)
+  const elapsedSeconds = Math.round((target.getTime() - Date.now()) / 1000)
+  const divisions = [
+    ['year', 31536000],
+    ['month', 2592000],
+    ['week', 604800],
+    ['day', 86400],
+    ['hour', 3600],
+    ['minute', 60],
+  ]
 
-  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-    const interval = Math.floor(seconds / secondsInUnit)
-    if (interval >= 1) {
-      return `${interval}${unit}`
+  for (const [unit, secondsInUnit] of divisions) {
+    if (Math.abs(elapsedSeconds) >= secondsInUnit) {
+      return new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' }).format(
+        Math.round(elapsedSeconds / secondsInUnit),
+        unit,
+      )
     }
   }
-  return 'now'
+
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' }).format(0, 'second')
 }

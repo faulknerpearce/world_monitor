@@ -1,4 +1,5 @@
 import { createFeedFetcher } from '@services/createFeedFetcher'
+import { useI18n } from '@context/I18nContext'
 import { useFeedData } from '@hooks/useFeedData'
 import { formatAmount, getTimeAgo } from '@utils'
 import './VCPanel.css'
@@ -25,30 +26,31 @@ const VC_STATS = {
 const fetchVCNews = createFeedFetcher('vc', 10)
 
 const VCPanel = () => {
+    const { t, locale } = useI18n()
     const { data: vcNews, loading } = useFeedData(fetchVCNews, 10 * 60 * 1000)
 
     return (
         <div className="vc-panel">
             <div className="vc-header-stats">
                 <div className="stat-item">
-                    <span className="stat-label">Capital Raised</span>
+                    <span className="stat-label">{t('vc.capitalRaised')}</span>
                     <span className="stat-value purple">{formatAmount(VC_STATS.totalRaised)}</span>
                 </div>
                 <div className="stat-item">
-                    <span className="stat-label">Funds Closed</span>
+                    <span className="stat-label">{t('vc.fundsClosed')}</span>
                     <span className="stat-value">{VC_STATS.funds}</span>
                 </div>
             </div>
 
             <div className="vc-news-container">
                 {loading && vcNews.length === 0 ? (
-                    <div className="loading-msg">Loading VC news...</div>
+                    <div className="loading-msg">{t('vc.loading')}</div>
                 ) : (
                     vcNews.map((news, idx) => (
                         <a key={idx} href={news.link} target="_blank" rel="noopener noreferrer" className="vc-news-item">
                             <div className="vc-news-header">
                                 <span className="vc-news-source">{news.source}</span>
-                                <span className="vc-news-time">{getTimeAgo(news.date)}</span>
+                                <span className="vc-news-time">{getTimeAgo(news.date, locale)}</span>
                             </div>
                             <span className="vc-news-title">{news.title}</span>
                         </a>
@@ -60,4 +62,3 @@ const VCPanel = () => {
 }
 
 export default VCPanel
-

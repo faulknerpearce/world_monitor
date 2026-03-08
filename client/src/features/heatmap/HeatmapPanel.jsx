@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '@context/I18nContext'
 import { formatPercent } from '@utils'
 import './HeatmapPanel.css'
 
@@ -20,6 +21,7 @@ const SECTORS = [
 const HeatmapPanel = () => {
   const [sectors, setSectors] = useState({})
   const [loading, setLoading] = useState(true)
+  const { t } = useI18n()
 
   useEffect(() => {
     fetchSectors()
@@ -67,7 +69,7 @@ const HeatmapPanel = () => {
   }
 
   if (loading) {
-    return <div className="loading-msg">Loading heatmap...</div>
+    return <div className="loading-msg">{t('heatmap.loading')}</div>
   }
 
   return (

@@ -1,3 +1,4 @@
+import { useI18n } from '@context/I18nContext'
 import './HotspotModal.css'
 
 // Map regions/keywords to market assets
@@ -78,20 +79,22 @@ const getRelatedAssets = (hotspot) => {
   return []
 }
 
-const formatNewsDate = (dateStr) => {
+const formatNewsDate = (dateStr, locale, t) => {
   try {
     const date = new Date(dateStr)
-    if (isNaN(date.getTime())) return 'Just Now'
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    if (isNaN(date.getTime())) return t('common.justNow')
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
   } catch (e) {
-    return 'Just Now'
+    return t('common.justNow')
   }
 }
 
 const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
+  const { t, locale } = useI18n()
   if (!selectedHotspot) return null
 
   const relatedAssets = getRelatedAssets(selectedHotspot)
+  const severityLabel = selectedHotspot.severity || selectedHotspot.level || 'medium'
 
   return (
     <div className="hotspot-popup visible">
@@ -104,30 +107,30 @@ const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
         </div>
         {selectedHotspot.type === 'hotspot' ? (
           <div className={`hotspot-popup-level ${selectedHotspot.severity || selectedHotspot.level || 'unknown'}`}>
-            {(selectedHotspot.severity || selectedHotspot.level || 'unknown').toUpperCase()}
+            {t(`map.${severityLabel}`)}
           </div>
         ) : selectedHotspot.type === 'country' ? (
-          <div className="hotspot-popup-level country">COUNTRY</div>
+          <div className="hotspot-popup-level country">{t('map.country')}</div>
         ) : selectedHotspot.type === 'intel' ? (
           <div className={`hotspot-popup-level ${selectedHotspot.severity || 'unknown'}`}>
-            {(selectedHotspot.severity || 'unknown').toUpperCase()}
+            {t(`map.${selectedHotspot.severity || 'medium'}`)}
           </div>
         ) : selectedHotspot.type === 'chokepoint' ? (
-          <div className="hotspot-popup-level elevated">SHIPPING</div>
+          <div className="hotspot-popup-level elevated">{t('map.shipping')}</div>
         ) : selectedHotspot.type === 'conflict' ? (
-          <div className="hotspot-popup-level high">CONFLICT</div>
+          <div className="hotspot-popup-level high">{t('map.conflict')}</div>
         ) : selectedHotspot.type === 'base' ? (
-          <div className="hotspot-popup-level medium">MILITARY BASE</div>
+          <div className="hotspot-popup-level medium">{t('map.militaryBase')}</div>
         ) : selectedHotspot.type === 'nuclear' ? (
-          <div className="hotspot-popup-level high">NUCLEAR</div>
+          <div className="hotspot-popup-level high">{t('map.nuclear')}</div>
         ) : selectedHotspot.type === 'cyber' ? (
-          <div className="hotspot-popup-level elevated">CYBER</div>
+          <div className="hotspot-popup-level elevated">{t('map.cyber')}</div>
         ) : selectedHotspot.type === 'city' ? (
           <div className={`hotspot-popup-level ${selectedHotspot.severity || 'medium'}`}>
-            {selectedHotspot.severity && typeof selectedHotspot.severity === 'string' ? selectedHotspot.severity.toUpperCase() : 'CITY'}
+            {selectedHotspot.severity && typeof selectedHotspot.severity === 'string' ? t(`map.${selectedHotspot.severity}`) : t('map.location')}
           </div>
         ) : (
-          <div className="hotspot-popup-level unknown">LOCATION</div>
+          <div className="hotspot-popup-level unknown">{t('map.location')}</div>
         )}
       </div>
       
@@ -139,14 +142,14 @@ const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
       )}
       {selectedHotspot.region && (
         <div className="hotspot-popup-location">
-          <strong>Region:</strong> {selectedHotspot.region}
+          <strong>{t('map.region')}</strong> {selectedHotspot.region}
         </div>
       )}
       
       {/* ASSETS AT RISK SECTION */}
       {relatedAssets.length > 0 && (
         <div className="hotspot-popup-assets-section">
-          <div className="hotspot-popup-section-title">ASSETS AT RISK</div>
+          <div className="hotspot-popup-section-title">{t('map.assetsAtRisk')}</div>
           <div className="hotspot-popup-assets-grid">
             {relatedAssets.map((asset, i) => (
               <div key={i} className="hotspot-asset-card">
@@ -162,38 +165,38 @@ const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
       )}
 
       <div className="hotspot-popup-desc">
-        {selectedHotspot.description || `Situation in ${selectedHotspot.name}. Monitoring for developments.`}
+        {selectedHotspot.description || t('map.situationDefault', { name: selectedHotspot.name })}
       </div>
       
       {selectedHotspot.status && (
-        <div className="hotspot-popup-status">Status: {selectedHotspot.status}</div>
+        <div className="hotspot-popup-status">{t('map.status', { status: selectedHotspot.status })}</div>
       )}
       
       {/* LIVE INTEL SECTION */}
       {newsLoading ? (
         <div className="hotspot-popup-headlines">
-          <div className="hotspot-popup-headlines-title">LIVE INTEL</div>
+          <div className="hotspot-popup-headlines-title">{t('map.liveIntel')}</div>
           <div className="hotspot-popup-loading">
             <div className="loading-spinner"></div>
-            <span>Loading intel...</span>
+            <span>{t('map.loadingIntel')}</span>
           </div>
         </div>
       ) : selectedHotspot.news && selectedHotspot.news.length > 0 ? (
         <div className="hotspot-popup-headlines">
-          <div className="hotspot-popup-headlines-title">LIVE INTEL ({selectedHotspot.news.length})</div>
+          <div className="hotspot-popup-headlines-title">{t('map.liveIntel')} ({selectedHotspot.news.length})</div>
           {selectedHotspot.news.map((item, i) => (
             <div key={i} className="hotspot-popup-headline">
               <a href={item.link} target="_blank" rel="noopener noreferrer">
                 {item.title}
               </a>
-              <div className="hotspot-popup-source">{item.source} • {formatNewsDate(item.pubDate)}</div>
+              <div className="hotspot-popup-source">{item.source} • {formatNewsDate(item.pubDate, locale, t)}</div>
             </div>
           ))}
         </div>
       ) : (
         <div className="hotspot-popup-headlines">
-          <div className="hotspot-popup-headlines-title">LIVE INTEL</div>
-          <div className="hotspot-popup-no-intel">No intel available for this location.</div>
+          <div className="hotspot-popup-headlines-title">{t('map.liveIntel')}</div>
+          <div className="hotspot-popup-no-intel">{t('map.noIntel')}</div>
         </div>
       )}
       <button className="hotspot-popup-close" onClick={onClose}>×</button>

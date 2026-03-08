@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useI18n } from '@context/I18nContext'
 import './Panel.css'
 
 const Panel = ({ 
@@ -14,6 +15,7 @@ const Panel = ({
   onDrop
 }) => {
   const [collapsed, setCollapsed] = useState(false)
+  const { t } = useI18n()
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -46,7 +48,7 @@ const Panel = ({
           {draggable && (
             <span 
               className="drag-handle" 
-              aria-label="Drag to reorder"
+              aria-label={t('panel.dragToReorder')}
               role="img"
             >
               ⠿
@@ -57,7 +59,7 @@ const Panel = ({
           </span>
           <h3 className="panel-title" id={`panel-title-${id}`}>{title}</h3>
           {count !== undefined && (
-            <span className="panel-count" aria-label={`${count} items`}>
+            <span className="panel-count" aria-label={t('panel.items', { count })}>
               ({count})
             </span>
           )}
@@ -78,4 +80,3 @@ const Panel = ({
 }
 
 export default Panel
-

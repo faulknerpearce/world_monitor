@@ -1,4 +1,5 @@
 import { createFeedFetcher } from '@services/createFeedFetcher'
+import { useI18n } from '@context/I18nContext'
 import { useFeedData } from '@hooks/useFeedData'
 import { getTimeAgo } from '@utils/dateHelpers'
 import './WarWatchPanel.css'
@@ -17,9 +18,10 @@ const fetchWarNews = createFeedFetcher('warWatch', 15)
 
 const WarWatchPanel = () => {
     const { data: news, loading } = useFeedData(fetchWarNews, 5 * 60 * 1000)
+    const { t, locale } = useI18n()
 
     if (loading && news.length === 0) {
-        return <div className="loading-msg">Loading conflict data...</div>
+        return <div className="loading-msg">{t('warwatch.loading')}</div>
     }
 
     return (
@@ -29,7 +31,7 @@ const WarWatchPanel = () => {
                     <div key={idx} className={`conflict-zone intensity-${zone.intensity}`}>
                         <span className="zone-indicator"></span>
                         <span className="zone-name">{zone.region}</span>
-                        <span className="zone-intensity">{zone.intensity}</span>
+                        <span className="zone-intensity">{t(`intensity.${zone.intensity}`)}</span>
                     </div>
                 ))}
             </div>
@@ -41,7 +43,7 @@ const WarWatchPanel = () => {
                         <a href={item.link} target="_blank" rel="noopener noreferrer" className="war-title">
                             {item.title}
                         </a>
-                        <div className="war-time">{getTimeAgo(item.date)}</div>
+                        <div className="war-time">{getTimeAgo(item.date, locale)}</div>
                     </div>
                 ))}
             </div>

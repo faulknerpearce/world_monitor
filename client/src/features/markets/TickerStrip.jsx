@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useI18n } from '@context/I18nContext'
 import './TickerStrip.css'
 
 const MARKET_ITEMS = [
@@ -64,6 +65,7 @@ const TickerStrip = ({ mode = 'default' }) => {
     const [loading, setLoading] = useState(true)
     const [isPaused, setIsPaused] = useState(false)
     const stripRef = useRef(null)
+    const { t } = useI18n()
 
     useEffect(() => {
         fetchTickerData()
@@ -164,7 +166,9 @@ const TickerStrip = ({ mode = 'default' }) => {
     if (loading) {
         return (
             <div className="ticker-container ticker-loading">
-                <div className="ticker-loading-text">Loading {mode === 'geo' ? 'Geo-Alpha' : 'market'} data...</div>
+                <div className="ticker-loading-text">
+                    {t('ticker.loading', { target: mode === 'geo' ? t('ticker.geoAlpha') : t('ticker.market') })}
+                </div>
             </div>
         )
     }
@@ -181,7 +185,7 @@ const TickerStrip = ({ mode = 'default' }) => {
                 onMouseLeave={() => setIsPaused(false)}
                 ref={stripRef}
             >
-                 <div className="ticker-label">GEO-ALPHA</div>
+                 <div className="ticker-label">{t('ticker.geoAlphaLabel')}</div>
                 <div className="ticker-strip">
                     <div className="ticker-track">
                         {itemsToDisplay.map((item, idx) => {
@@ -240,4 +244,3 @@ const TickerStrip = ({ mode = 'default' }) => {
 }
 
 export default TickerStrip
-
