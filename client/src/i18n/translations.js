@@ -9,9 +9,11 @@ export const SUPPORTED_LANGUAGES = [
 
 export const DEFAULT_LANGUAGE = 'en'
 
+const appTitle = import.meta.env.VITE_BRAND_TITLE || 'WORLD MONITOR'
+
 const shared = {
   app: {
-    title: 'WORLD MONITOR',
+    title: appTitle,
   },
   common: {
     live: 'LIVE',
