@@ -32,6 +32,8 @@ const shared = {
     refreshAllData: 'Refresh all data',
     openCommandSelector: 'Open command mode selector',
     openSettings: 'Open application settings',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
   },
   settings: {
     title: 'Settings',
@@ -258,7 +260,7 @@ export const TRANSLATIONS = {
   es: {
     ...shared,
     common: { ...shared.common, settings: 'AJUSTES', command: 'COMANDO', refresh: 'ACTUALIZAR', close: 'Cerrar', retry: 'Reintentar', justNow: 'Ahora mismo' },
-    nav: { dashboard: 'Panel', map: 'Mapa', refreshingData: 'Actualizando datos', refreshAllData: 'Actualizar todos los datos', openCommandSelector: 'Abrir selector de modo de comando', openSettings: 'Abrir ajustes de la aplicación' },
+    nav: { dashboard: 'Panel', map: 'Mapa', refreshingData: 'Actualizando datos', refreshAllData: 'Actualizar todos los datos', openCommandSelector: 'Abrir selector de modo de comando', openSettings: 'Abrir ajustes de la aplicación', openMenu: 'Abrir menú', closeMenu: 'Cerrar menú' },
     settings: { title: 'Ajustes', close: 'Cerrar ajustes', appearance: 'Apariencia', language: 'Idioma', languageHelp: 'Elige el idioma de la interfaz.', theme: 'Tema', selectTheme: 'Seleccionar tema {theme}' },
     language: { english: 'Inglés', spanish: 'Español', portuguese: 'Portugués', french: 'Francés', italian: 'Italiano', german: 'Alemán' },
     theme: { githubDark: 'GitHub oscuro', light: 'Claro' },
@@ -287,7 +289,7 @@ export const TRANSLATIONS = {
   pt: {
     ...shared,
     common: { ...shared.common, settings: 'CONFIG.', command: 'COMANDO', refresh: 'ATUALIZAR', close: 'Fechar', retry: 'Tentar de novo', justNow: 'Agora mesmo' },
-    nav: { dashboard: 'Painel', map: 'Mapa', refreshingData: 'Atualizando dados', refreshAllData: 'Atualizar todos os dados', openCommandSelector: 'Abrir seletor de modo de comando', openSettings: 'Abrir configurações do aplicativo' },
+    nav: { dashboard: 'Painel', map: 'Mapa', refreshingData: 'Atualizando dados', refreshAllData: 'Atualizar todos os dados', openCommandSelector: 'Abrir seletor de modo de comando', openSettings: 'Abrir configurações do aplicativo', openMenu: 'Abrir menu', closeMenu: 'Fechar menu' },
     settings: { title: 'Configurações', close: 'Fechar configurações', appearance: 'Aparência', language: 'Idioma', languageHelp: 'Escolha o idioma da interface.', theme: 'Tema', selectTheme: 'Selecionar tema {theme}' },
     language: { english: 'Inglês', spanish: 'Espanhol', portuguese: 'Português', french: 'Francês', italian: 'Italiano', german: 'Alemão' },
     theme: { githubDark: 'GitHub escuro', light: 'Claro' },
@@ -315,8 +317,8 @@ export const TRANSLATIONS = {
   },
   fr: {
     ...shared,
-    common: { ...shared.common, settings: 'PARAM.', command: 'COMMANDE', refresh: 'ACTUALISER', close: 'Fermer', retry: 'Réessayer', justNow: 'À l’instant' },
-    nav: { dashboard: 'Tableau', map: 'Carte', refreshingData: 'Actualisation des données', refreshAllData: 'Actualiser toutes les données', openCommandSelector: 'Ouvrir le sélecteur de mode', openSettings: 'Ouvrir les paramètres de l’application' },
+    common: { ...shared.common, settings: 'PARAM.', command: 'COMMANDE', refresh: 'ACTUALISER', close: 'Fermer', retry: 'Réessayer', justNow: 'À l\'instant' },
+    nav: { dashboard: 'Tableau', map: 'Carte', refreshingData: 'Actualisation des données', refreshAllData: 'Actualiser toutes les données', openCommandSelector: 'Ouvrir le sélecteur de mode', openSettings: 'Ouvrir les paramètres de l\'application', openMenu: 'Ouvrir le menu', closeMenu: 'Fermer le menu' },
     settings: { title: 'Paramètres', close: 'Fermer les paramètres', appearance: 'Apparence', language: 'Langue', languageHelp: 'Choisissez la langue de l’interface.', theme: 'Thème', selectTheme: 'Sélectionner le thème {theme}' },
     language: { english: 'Anglais', spanish: 'Espagnol', portuguese: 'Portugais', french: 'Français', italian: 'Italien', german: 'Allemand' },
     theme: { githubDark: 'GitHub sombre', light: 'Clair' },
@@ -345,7 +347,7 @@ export const TRANSLATIONS = {
   it: {
     ...shared,
     common: { ...shared.common, settings: 'IMPOST.', command: 'COMANDO', refresh: 'AGGIORNA', close: 'Chiudi', retry: 'Riprova', justNow: 'Proprio ora' },
-    nav: { dashboard: 'Dashboard', map: 'Mappa', refreshingData: 'Aggiornamento dati', refreshAllData: 'Aggiorna tutti i dati', openCommandSelector: 'Apri selettore modalità comando', openSettings: 'Apri impostazioni applicazione' },
+    nav: { dashboard: 'Dashboard', map: 'Mappa', refreshingData: 'Aggiornamento dati', refreshAllData: 'Aggiorna tutti i dati', openCommandSelector: 'Apri selettore modalità comando', openSettings: 'Apri impostazioni applicazione', openMenu: 'Apri menu', closeMenu: 'Chiudi menu' },
     settings: { title: 'Impostazioni', close: 'Chiudi impostazioni', appearance: 'Aspetto', language: 'Lingua', languageHelp: 'Scegli la lingua dell’interfaccia.', theme: 'Tema', selectTheme: 'Seleziona tema {theme}' },
     language: { english: 'Inglese', spanish: 'Spagnolo', portuguese: 'Portoghese', french: 'Francese', italian: 'Italiano', german: 'Tedesco' },
     theme: { githubDark: 'GitHub scuro', light: 'Chiaro' },
@@ -374,7 +376,7 @@ export const TRANSLATIONS = {
   de: {
     ...shared,
     common: { ...shared.common, settings: 'EINST.', command: 'BEFEHL', refresh: 'AKTUAL.', close: 'Schließen', retry: 'Erneut versuchen', justNow: 'Gerade eben' },
-    nav: { dashboard: 'Dashboard', map: 'Karte', refreshingData: 'Daten werden aktualisiert', refreshAllData: 'Alle Daten aktualisieren', openCommandSelector: 'Befehlsmodus-Auswahl öffnen', openSettings: 'Anwendungseinstellungen öffnen' },
+    nav: { dashboard: 'Dashboard', map: 'Karte', refreshingData: 'Daten werden aktualisiert', refreshAllData: 'Alle Daten aktualisieren', openCommandSelector: 'Befehlsmodus-Auswahl öffnen', openSettings: 'Anwendungseinstellungen öffnen', openMenu: 'Menü öffnen', closeMenu: 'Menü schließen' },
     settings: { title: 'Einstellungen', close: 'Einstellungen schließen', appearance: 'Darstellung', language: 'Sprache', languageHelp: 'Wähle die Sprache der Oberfläche.', theme: 'Thema', selectTheme: 'Thema {theme} auswählen' },
     language: { english: 'Englisch', spanish: 'Spanisch', portuguese: 'Portugiesisch', french: 'Französisch', italian: 'Italienisch', german: 'Deutsch' },
     theme: { githubDark: 'GitHub dunkel', light: 'Hell' },

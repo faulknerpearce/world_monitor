@@ -29,7 +29,7 @@ const StartupsPanel = () => {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex justify-around px-2 pb-2.5 border-b border-[rgba(255,255,255,0.05)]">
+            <div className="flex justify-between items-center py-2.5 px-4 bg-[rgba(16,185,129,0.05)] border-b border-[rgba(16,185,129,0.1)] shrink-0">
                 <div className="flex flex-col items-center">
                     <span className="text-[0.65rem] text-text-dim uppercase">{t('startups.totalRaised')}</span>
                     <span className="text-lg font-bold !text-[var(--green)]">{formatAmount(totalRaisedVal)}</span>
@@ -40,17 +40,17 @@ const StartupsPanel = () => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto flex flex-col">
+            <div className="flex-1 overflow-y-auto flex flex-col p-4">
                 {loading && news.length === 0 ? (
                     <div className="p-4 text-center text-text-dim text-[0.8rem]">{t('startups.loading')}</div>
                 ) : (
                     news.map((item, idx) => (
-                        <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer" className="flex flex-col p-3 border-b border-[rgba(255,255,255,0.05)] no-underline transition-colors duration-200 hover:bg-[rgba(255,255,255,0.03)]">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-[0.7rem] text-[var(--green)] uppercase font-semibold">{item.source}</span>
-                                <span className="text-[0.7rem] text-text-dim">{getTimeAgo(item.date, locale)}</span>
+                        <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer" className="flex flex-col p-3.5 mb-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-lg no-underline transition-all duration-200 hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] hover:-translate-y-0.5 shadow-sm hover:shadow-md group">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[0.65rem] text-[var(--green)] uppercase font-bold tracking-[0.1em] group-hover:text-green-400 transition-colors duration-200">{item.source}</span>
+                                <span className="text-[0.65rem] text-text-dim font-[family-name:var(--font-mono)]">{getTimeAgo(item.date, locale)}</span>
                             </div>
-                            <span className="text-[0.85rem] text-white leading-[1.4] font-medium line-clamp-2">{item.title}</span>
+                            <span className="text-[0.85rem] text-text-primary leading-relaxed font-medium line-clamp-3 group-hover:text-green-400 transition-colors duration-200">{item.title}</span>
                         </a>
                     ))
                 )}

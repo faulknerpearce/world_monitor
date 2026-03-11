@@ -24,8 +24,8 @@ const Panel = ({
   }
 
   return (
-    <article 
-      className={`panel bg-bg-panel backdrop-blur-[12px] border border-border-glass rounded-lg overflow-hidden flex flex-col h-[340px] opacity-0 translate-y-3 animate-panel-enter transition-[border-color,box-shadow,transform] duration-300 hover:border-accent hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(var(--accent-rgb),0.15)] hover:-translate-y-0.5 md:max-[768px]:h-[300px] md:max-[768px]:rounded-md ${isWide ? 'col-span-2 md:max-[768px]:col-span-1' : ''} ${collapsed ? 'collapsed' : ''}`}
+    <article
+      className={`panel bg-bg-panel backdrop-blur-[12px] border border-border-glass rounded-lg overflow-hidden flex flex-col opacity-0 translate-y-3 animate-panel-enter transition-[border-color,box-shadow,transform] duration-300 hover:border-accent hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(var(--accent-rgb),0.15)] hover:-translate-y-0.5 md:max-[768px]:rounded-md ${isWide ? 'col-span-2 md:max-[768px]:col-span-1' : ''} ${collapsed ? 'collapsed' : ''}`}
       data-panel={id}
       draggable={draggable}
       onDragStart={onDragStart}

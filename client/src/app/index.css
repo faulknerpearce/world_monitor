@@ -166,14 +166,29 @@
 
     /* ===== Hero panels height override ===== */
     .hero-featured .panel {
-        height: 450px;
+        height: 400px !important;
     }
 
-    /* ===== Taller panels for startups, vc, layoffs ===== */
+    /* ===== Unified panel heights for all panels ===== */
+    .panel,
+    .hero-featured .panel,
     .news-grid .panel[data-panel="startups"],
     .news-grid .panel[data-panel="vc"],
-    .news-grid .panel[data-panel="layoffs"] {
-        height: 650px;
+    .news-grid .panel[data-panel="layoffs"],
+    .news-grid .panel {
+        height: 400px !important;
+    }
+
+    /* ===== Mobile responsive panel heights ===== */
+    @media (max-width: 768px) {
+        .hero-featured .panel,
+        .news-grid .panel[data-panel="startups"],
+        .news-grid .panel[data-panel="vc"],
+        .news-grid .panel[data-panel="layoffs"],
+        .news-grid .panel,
+        .panel {
+            height: 320px !important;
+        }
     }
 
     /* ===== Ticker animations ===== */
@@ -462,11 +477,150 @@
             height: 400px;
         }
     }
+}
 
-    @media (max-width: 768px) {
-        .ticker-strip::before,
-        .ticker-strip::after {
-            width: 20px;
-        }
+/* ===== Mobile responsive improvements (768px and below) ===== */
+@media (max-width: 768px) {
+    /* Ticker fade zones smaller on mobile */
+    .ticker-strip::before,
+    .ticker-strip::after {
+        width: 20px;
+    }
+
+    /* Minimum touch target size (44px) for all interactive elements */
+    button,
+    a,
+    [role="button"],
+    [tabindex] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Navbar buttons full height */
+    nav button {
+        height: auto;
+        min-height: 44px;
+    }
+
+    /* Minimum font size for readability */
+    .text-\[0\.6rem\],
+    .text-\[0\.65rem\] {
+        font-size: clamp(0.7rem, 2vw, 0.75rem) !important;
+    }
+
+    .text-\[0\.7rem\] {
+        font-size: clamp(0.75rem, 2.5vw, 0.8rem) !important;
+    }
+
+    /* Panel heights - unified on mobile */
+    .hero-featured .panel,
+    .news-grid .panel[data-panel="startups"],
+    .news-grid .panel[data-panel="vc"],
+    .news-grid .panel[data-panel="layoffs"],
+    .news-grid .panel {
+        height: 320px !important;
+    }
+
+    /* Grid gap adjustments - smaller on mobile */
+    .news-grid {
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    /* Hero section gap */
+    .hero-featured {
+        gap: 12px !important;
+    }
+
+    /* Dashboard main content padding - reduced on mobile */
+    main > div:nth-child(2) {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+    /* Focus indicators for accessibility */
+    button:focus-visible,
+    a:focus-visible,
+    [role="button"]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* Navbar padding reduced on mobile */
+    nav {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* Live indicator larger on mobile */
+    .live-pulse,
+    .animate-live-pulse {
+        width: 8px !important;
+        height: 8px !important;
+    }
+
+    /* Add bottom padding when geo ticker is fixed (mobile) */
+    main {
+        padding-bottom: 52px !important;
+    }
+}
+
+/* ===== Extra small mobile (480px and below) ===== */
+@media (max-width: 480px) {
+    /* Larger touch targets */
+    button,
+    a,
+    [role="button"] {
+        min-height: 48px;
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+    /* Unified panel height */
+    .panel,
+    .hero-featured .panel {
+        height: 300px !important;
+    }
+
+    /* Base font size */
+    body {
+        font-size: 16px;
+    }
+
+    /* Grid even smaller */
+    .news-grid {
+        gap: 8px !important;
+        padding: 8px !important;
+    }
+
+    /* Category tabs - stack on small screens */
+    .category-tabs {
+        flex-wrap: wrap;
+    }
+}
+
+/* ===== Reduced motion support ===== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Disable infinite animations */
+    .animate-live-pulse,
+    .animate-pulse-slow,
+    .animate-pulse,
+    .animate-pulse-cyber,
+    .animate-pulse-critical,
+    .animate-ticker-scroll,
+    .animate-ticker-scroll-reverse,
+    .animate-spin,
+    .animate-shimmer {
+        animation: none !important;
     }
 }

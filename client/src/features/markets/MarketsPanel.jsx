@@ -59,7 +59,7 @@ const MarketsPanel = () => {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex-1 overflow-y-auto flex flex-col p-4 h-full overflow-hidden">
       {MARKETS.map(market => {
         const data = markets[market.symbol]
         if (!data) return null
@@ -67,16 +67,16 @@ const MarketsPanel = () => {
         const isUp = data.change >= 0
 
         return (
-          <div key={market.symbol} className="p-3 bg-bg-dark flex justify-between items-center border border-transparent transition-all duration-200 hover:border-accent">
-            <div>
-              <div className="text-sm text-text-primary font-semibold">{market.name}</div>
-              <div className="text-xs text-text-secondary">{market.symbol}</div>
+          <div key={market.symbol} className="flex justify-between items-center p-3.5 mb-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-lg transition-all duration-200 hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] hover:-translate-y-0.5 shadow-sm hover:shadow-md">
+            <div className="flex flex-col">
+              <span className="text-[0.85rem] text-text-primary font-medium">{market.name}</span>
+              <span className="text-[0.65rem] text-text-dim uppercase tracking-[0.05em]">{market.symbol}</span>
             </div>
-            <div className="text-right">
-              <div className="text-base font-bold text-text-primary">${formatNumber(data.price)}</div>
-              <div className={`text-sm font-semibold ${isUp ? 'text-white' : 'text-[var(--alert)]'}`}>
-                {formatPercent(data.changePercent)}
-              </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[0.85rem] font-bold text-text-primary">${formatNumber(data.price)}</span>
+              <span className={`text-[0.75rem] font-semibold mt-0.5 ${isUp ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
+                {isUp ? '+' : ''}{formatPercent(data.changePercent)}
+              </span>
             </div>
           </div>
         )

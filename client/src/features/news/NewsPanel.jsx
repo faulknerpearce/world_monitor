@@ -65,7 +65,7 @@ const NewsPanel = ({ feeds, panelId }) => {
   }
 
   return (
-    <div className={`${getThemeClass()} flex flex-col`}>
+    <div className={`${getThemeClass()} flex flex-col h-full overflow-hidden`}>
       <div className="news-summary flex gap-5 py-2.5 px-4 border-b border-[rgba(255,255,255,0.06)] items-center">
         <div className="flex items-center gap-1.5">
           <span className="stat-value text-[0.9rem] font-bold text-text-primary font-[family-name:var(--font-mono)]">{news.length}</span>
@@ -81,14 +81,16 @@ const NewsPanel = ({ feeds, panelId }) => {
         </div>
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex-1 overflow-y-auto flex flex-col p-4">
         {news.map((item, idx) => (
-          <div key={idx} className="news-item py-2.5 px-4 bg-transparent border-l-2 border-l-transparent border-b border-b-[rgba(255,255,255,0.04)] transition-all duration-200 cursor-pointer relative last:border-b-0 hover:bg-[rgba(255,255,255,0.04)] hover:border-l-current hover:translate-x-0.5">
-            <div className="item-source text-[0.7rem] font-semibold uppercase tracking-[0.08em] mb-0.5">{item.source}</div>
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="block text-text-primary text-[0.85rem] leading-[1.45] no-underline font-normal transition-colors duration-200 hover:text-[#818cf8]">
+          <div key={idx} className="news-item flex flex-col p-3.5 mb-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-lg transition-all duration-200 cursor-pointer hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] hover:-translate-y-0.5 shadow-sm hover:shadow-md group">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="item-source text-[0.65rem] font-bold uppercase tracking-[0.1em] text-text-muted group-hover:text-accent transition-colors duration-200">{item.source}</span>
+              <span className="text-[0.65rem] text-text-dim font-[family-name:var(--font-mono)]">{getTimeAgo(item.date, locale)}</span>
+            </div>
+            <a href={item.link} target="_blank" rel="noopener noreferrer" className="block text-text-primary text-[0.85rem] font-medium leading-relaxed no-underline transition-colors duration-200 hover:text-accent line-clamp-3">
               {item.title}
             </a>
-            <div className="text-[0.7rem] text-text-dim mt-1 font-[family-name:var(--font-mono)]">{getTimeAgo(item.date, locale)}</div>
           </div>
         ))}
       </div>
