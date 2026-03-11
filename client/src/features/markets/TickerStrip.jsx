@@ -176,15 +176,15 @@ const TickerStrip = ({ mode = 'default' }) => {
     if (mode === 'geo') {
         const geoItems = GEO_ITEMS.filter(item => tickerData[item.symbol])
         itemsToDisplay = [...geoItems, ...geoItems, ...geoItems] // Triple for smooth loop
-        
+
         return (
              <div
-                className={`w-full bg-ticker-bg border-b border-border-glass shrink-0 relative z-20 py-1 !fixed !bottom-0 !left-0 !right-0 !border-t !border-t-accent !border-b-0 !bg-[linear-gradient(to_bottom,rgba(10,20,15,0.95),rgba(5,10,8,0.98))] !z-50 ${isPaused ? 'paused' : ''}`}
+                className={`w-full bg-ticker-bg border-b border-border-glass shrink-0 relative py-1 !border-t !border-t-accent !border-b-0 !bg-[linear-gradient(to_bottom,rgba(10,20,15,0.95),rgba(5,10,8,0.98))] !z-40 max-[768px]:fixed max-[768px]:bottom-0 max-[768px]:left-0 max-[768px]:right-0 ${isPaused ? 'paused' : ''}`}
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
                 ref={stripRef}
             >
-                 <div className="absolute left-0 top-0 bottom-0 bg-accent text-black text-[0.7rem] font-extrabold px-3 flex items-center z-10 tracking-[1px] shadow-[5px_0_15px_rgba(0,0,0,0.5)]">{t('ticker.geoAlphaLabel')}</div>
+                 <div className="absolute left-0 top-0 bottom-0 bg-accent text-black text-[0.7rem] font-extrabold px-3 flex items-center z-10 tracking-[1px] shadow-[5px_0_15px_rgba(0,0,0,0.5)] max-[768px]:text-[0.75rem]">{t('ticker.geoAlphaLabel')}</div>
                 <div className="ticker-strip w-full overflow-hidden relative">
                     <div className="ticker-track flex gap-6 py-1.5 animate-ticker-scroll w-max">
                         {itemsToDisplay.map((item, idx) => {
