@@ -14,8 +14,7 @@ import CategoryTabs from './CategoryTabs'
 import TickerStrip from '@features/markets/TickerStrip'
 import { useI18n } from '@context/I18nContext'
 
-// Hero panels are featured at the top with larger size
-const HERO_PANELS = ['politics', 'blockchain']
+// No hero panels - all rendered in unified grid
 
 const Dashboard = ({ panelSettings, currentMode }) => {
   const { t } = useI18n()
@@ -70,7 +69,6 @@ const Dashboard = ({ panelSettings, currentMode }) => {
   // Filter panels by command mode first, then by category
   const filteredPanels = enabledPanels.filter(id => {
     if (id === 'markets' || id === 'heatmap') return false
-    if (HERO_PANELS.includes(id)) return false // Exclude hero panels from grid
     const panelConfig = PANELS[id]
     if (!panelConfig) return false
     
@@ -118,34 +116,18 @@ const Dashboard = ({ panelSettings, currentMode }) => {
       </div>
 
       {/* Main scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6 max-[1400px]:px-4 max-[1400px]:pb-4 max-[1000px]:px-4 max-[1000px]:pb-4 max-[600px]:px-3 max-[600px]:pb-3">
-        {/* Hero Section - Featured Panels */}
-        <section className="mb-6">
-          {/* Featured Panels */}
-          <div className="hero-featured grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-            {HERO_PANELS.map(panelId => (
-              <Panel
-                key={panelId}
-                id={panelId}
-                title={t(PANELS[panelId]?.nameKey) || panelId}
-                draggable={false}
-              >
-                <ErrorBoundary>
-                  {getPanelContent(panelId)}
-                </ErrorBoundary>
-              </Panel>
-            ))}
-          </div>
-        </section>
-
+      <div className="flex-1 overflow-y-auto px-6 py-6 max-[1400px]:px-4 max-[1400px]:py-4 max-[1000px]:px-4 max-[1000px]:py-4 max-[768px]:px-3 max-[768px]:py-3 max-[768px]:pt-4">
         {/* Category Tabs */}
-        <CategoryTabs
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+        <div className="mb-6 max-[1400px]:mb-4 max-[1000px]:mb-4 max-[768px]:mb-3">
+          <CategoryTabs
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+        </div>
+
 
         {/* Filtered panels grid - 3 columns */}
-        <div className="news-grid grid grid-cols-3 gap-6 p-6 flex-1 overflow-y-auto content-start max-[1400px]:grid-cols-2 max-[1000px]:grid-cols-2 max-[1000px]:p-4 max-[1000px]:gap-3 max-[600px]:grid-cols-1 max-[600px]:p-3">
+        <div className="news-grid grid grid-cols-3 gap-6 flex-1 overflow-y-auto content-start max-[1400px]:grid-cols-2 max-[1000px]:grid-cols-2 max-[1000px]:gap-4 max-[768px]:grid-cols-1 max-[768px]:gap-3">
           {filteredPanels.map(panelId => {
             const config = PANELS[panelId]
             if (!config) return null
