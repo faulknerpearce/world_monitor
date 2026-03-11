@@ -1296,218 +1296,177 @@ const GlobalMap = () => {
 
   return (
     <div className="global-map-container relative h-full w-full flex-1 bg-[linear-gradient(135deg,#0a1419_0%,#020a08_100%)] overflow-hidden" ref={containerRef}>
-      {/* Quick Stats Bar */}
-      <div className="absolute top-0 left-0 right-0 flex justify-center items-center gap-6 py-3 px-4 bg-nav-bg backdrop-blur-[10px] border-b border-border-main z-20">
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[0.6rem] font-semibold tracking-[0.1em] text-text-dim">{t('map.activeConflicts')}</span>
-          <span className={`stat-value text-base font-bold font-[family-name:var(--font-mono)] text-accent ${activeConflicts > 2 ? 'critical' : ''}`}>{activeConflicts}</span>
-        </div>
-        <div className="w-px h-[30px] bg-border-main"></div>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[0.6rem] font-semibold tracking-[0.1em] text-text-dim">{t('map.globalAlert')}</span>
-          <span className={`stat-value text-base font-bold font-[family-name:var(--font-mono)] text-accent alert-${alertLevel}`}>{t(`map.${alertLevel}`)}</span>
-        </div>
-        <div className="w-px h-[30px] bg-border-main"></div>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[0.6rem] font-semibold tracking-[0.1em] text-text-dim">{t('map.intelHotspots')}</span>
-          <span className="stat-value text-base font-bold font-[family-name:var(--font-mono)] text-accent">{totalIntel > 0 ? totalIntel : '—'}</span>
-        </div>
-        <div className="w-px h-[30px] bg-border-main"></div>
-        <div className="flex flex-row items-center gap-1">
-          <button
-            className={`py-1.5 px-3 bg-transparent border border-border-main text-text-secondary text-[0.65rem] font-semibold tracking-[0.05em] cursor-pointer transition-all duration-200 hover:border-accent hover:text-accent ${projectionMode === '3d' ? '!bg-accent !border-accent !text-bg-dark' : ''}`}
-            onClick={() => handleProjectionModeChange('3d')}
-            title={t('map.globeView')}
-          >
-            3D
-          </button>
-          <button
-            className={`py-1.5 px-3 bg-transparent border border-border-main text-text-secondary text-[0.65rem] font-semibold tracking-[0.05em] cursor-pointer transition-all duration-200 hover:border-accent hover:text-accent ${projectionMode === 'flat' ? '!bg-accent !border-accent !text-bg-dark' : ''}`}
-            onClick={() => handleProjectionModeChange('flat')}
-            title={t('map.flatView')}
-          >
-            FLAT
-          </button>
-        </div>
-        <div className="w-px h-[30px] bg-border-main"></div>
-        <div className="flex flex-col items-center gap-1">
-          <button
-            className={`py-1.5 px-3 bg-transparent border border-border-main text-text-secondary text-[0.65rem] font-semibold tracking-[0.05em] cursor-pointer transition-all duration-200 hover:border-accent hover:text-accent ${isAutoRotating ? '!bg-accent !border-accent !text-bg-dark' : ''}`}
-            onClick={() => setIsAutoRotating(!isAutoRotating)}
-            title={isAutoRotating ? t('map.stopRotation') : t('map.startRotation')}
-          >
-            {isAutoRotating ? t('map.rotating') : t('map.paused')}
-          </button>
-        </div>
-      </div>
-      <div className="absolute top-16 z-10 flex flex-col gap-4 right-4 items-end">
-        <div className="flex bg-[rgba(10,14,20,0.9)] border border-border-main overflow-hidden">
-          <button
-            className={`py-2 px-4 bg-transparent text-text-secondary border-none text-xs font-bold tracking-[1px] cursor-pointer transition-all duration-200 border-r border-border-main hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${mapView === 'global' ? '!bg-accent !text-bg-dark' : ''}`}
-            onClick={() => setMapView('global')}
-          >
-            {t('map.global')}
-          </button>
-          <button
-            className={`py-2 px-4 bg-transparent text-text-secondary border-none text-xs font-bold tracking-[1px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${mapView === 'us' ? '!bg-accent !text-bg-dark' : ''}`}
-            onClick={() => setMapView('us')}
-          >
-            {t('map.us')}
-          </button>
-        </div>
-        <div className="flex gap-1 bg-[rgba(10,14,20,0.9)] border border-border-main p-1">
-          <button className="w-8 h-8 bg-transparent text-text-primary border-none text-base font-bold cursor-pointer transition-all duration-200 hover:bg-accent hover:text-bg-dark" onClick={handleZoomIn} title={t('map.zoomIn')}>+</button>
-          <div className="flex items-center px-2 text-xs font-semibold text-text-secondary min-w-[3rem] justify-center">{zoomLevel.toFixed(1)}x</div>
-          <button className="w-8 h-8 bg-transparent text-text-primary border-none text-base font-bold cursor-pointer transition-all duration-200 hover:bg-accent hover:text-bg-dark" onClick={handleZoomOut} title={t('map.zoomOut')}>−</button>
-          <button className="w-8 h-8 bg-transparent text-text-primary border-none text-base font-bold cursor-pointer transition-all duration-200 hover:bg-accent hover:text-bg-dark" onClick={handleZoomReset} title={t('map.reset')}>RST</button>
-        </div>
-      </div>
-      <div className="absolute top-16 z-10 flex flex-col gap-4 left-4 items-start">
-        <div className="flex flex-col gap-2">
-          {/* Layer Presets */}
-          <div className="flex gap-1 bg-[rgba(10,14,20,0.9)] border border-border-main p-1 mb-2">
-            <button
-              className={`py-1.5 px-3 bg-transparent text-text-secondary border border-transparent text-[0.7rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent hover:border-accent ${!layerVisibility.shippingChokepoints && !layerVisibility.conflictZones && !layerVisibility.militaryBases ? '!bg-accent !text-bg-dark !border-accent' : ''}`}
-              onClick={() => setLayerVisibility(prev => ({
-                ...prev,
-                hotspots: false,
-                intelHotspots: true,
-                shippingChokepoints: false,
-                conflictZones: false,
-                militaryBases: false,
-                nuclearFacilities: false,
-                underseaCables: false,
-                cyberRegions: false
-              }))}
-              title={t('map.presetIntelTitle')}
-            >
-              {t('map.presetIntel')}
-            </button>
-            <button
-              className={`py-1.5 px-3 bg-transparent text-text-secondary border border-transparent text-[0.7rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent hover:border-accent ${layerVisibility.conflictZones && layerVisibility.intelHotspots ? '!bg-accent !text-bg-dark !border-accent' : ''}`}
-              onClick={() => setLayerVisibility(prev => ({
-                ...prev,
-                hotspots: true,
-                intelHotspots: true,
-                shippingChokepoints: false,
-                conflictZones: true,
-                militaryBases: false,
-                nuclearFacilities: false,
-                underseaCables: false,
-                cyberRegions: false
-              }))}
-              title={t('map.presetConflictTitle')}
-            >
-              {t('map.presetConflict')}
-            </button>
-            <button
-              className={`py-1.5 px-3 bg-transparent text-text-secondary border border-transparent text-[0.7rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent hover:border-accent ${layerVisibility.shippingChokepoints && layerVisibility.underseaCables ? '!bg-accent !text-bg-dark !border-accent' : ''}`}
-              onClick={() => setLayerVisibility(prev => ({
-                ...prev,
-                hotspots: false,
-                intelHotspots: false,
-                shippingChokepoints: true,
-                conflictZones: false,
-                militaryBases: false,
-                nuclearFacilities: false,
-                underseaCables: true,
-                cyberRegions: false
-              }))}
-              title={t('map.presetTradeTitle')}
-            >
-              {t('map.presetTrade')}
-            </button>
-            <button
-              className={`py-1.5 px-3 bg-transparent text-text-secondary border border-transparent text-[0.7rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent hover:border-accent ${layerVisibility.militaryBases && layerVisibility.nuclearFacilities ? '!bg-accent !text-bg-dark !border-accent' : ''}`}
-              onClick={() => setLayerVisibility(prev => ({
-                ...prev,
-                hotspots: false,
-                intelHotspots: true,
-                shippingChokepoints: false,
-                conflictZones: true,
-                militaryBases: true,
-                nuclearFacilities: true,
-                underseaCables: false,
-                cyberRegions: false
-              }))}
-              title={t('map.presetDefenseTitle')}
-            >
-              {t('map.presetDefense')}
-            </button>
+      {/* Right Controls Sidebar */}
+      <div className="absolute top-4 z-10 flex flex-col gap-2 right-4 max-[1000px]:top-20 max-[768px]:top-auto max-[768px]:bottom-[50px] max-[768px]:left-1/2 max-[768px]:-translate-x-1/2 max-[768px]:right-auto max-[768px]:w-[95%] max-[768px]:max-w-[400px] bg-[rgba(10,14,20,0.85)] backdrop-blur-md rounded-xl border border-border-main p-1.5 shadow-lg">
+        
+        <div className="flex flex-col gap-2 max-[768px]:flex-col max-[768px]:gap-1.5">
+          {/* Top Row on Mobile (Region + Projection) */}
+          <div className="flex flex-col gap-2 max-[768px]:flex-row max-[768px]:justify-between max-[768px]:gap-1 border-b border-border-main pb-1.5 max-[768px]:pb-1.5">
+            {/* Region Toggle */}
+            <div className="flex flex-col gap-1 max-[768px]:flex-row max-[768px]:w-1/2 max-[768px]:border-r max-[768px]:border-border-main max-[768px]:pr-1">
+              <button
+                className={`py-2 px-3 text-xs font-bold tracking-[1px] rounded-lg transition-all duration-200 text-left max-[768px]:w-1/2 max-[768px]:text-[0.6rem] max-[768px]:py-1.5 max-[768px]:px-1 max-[768px]:text-center ${mapView === 'global' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
+                onClick={() => setMapView('global')}
+              >
+                {t('map.global')}
+              </button>
+              <button
+                className={`py-2 px-3 text-xs font-bold tracking-[1px] rounded-lg transition-all duration-200 text-left max-[768px]:w-1/2 max-[768px]:text-[0.6rem] max-[768px]:py-1.5 max-[768px]:px-1 max-[768px]:text-center ${mapView === 'us' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
+                onClick={() => setMapView('us')}
+              >
+                {t('map.us')}
+              </button>
+            </div>
+
+            {/* Projection Controls */}
+            <div className="flex flex-col gap-1 max-[768px]:flex-row max-[768px]:w-1/2 max-[768px]:pl-1">
+              <button
+                className={`py-1.5 px-3 text-[0.65rem] font-bold tracking-[0.05em] rounded-lg transition-all duration-200 max-[768px]:w-1/2 max-[768px]:text-[0.55rem] max-[768px]:px-1 ${projectionMode === '3d' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
+                onClick={() => handleProjectionModeChange('3d')}
+              >
+                3D Globe
+              </button>
+              <button
+                className={`py-1.5 px-3 text-[0.65rem] font-bold tracking-[0.05em] rounded-lg transition-all duration-200 max-[768px]:w-1/2 max-[768px]:text-[0.55rem] max-[768px]:px-1 ${projectionMode === 'flat' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
+                onClick={() => handleProjectionModeChange('flat')}
+              >
+                Flat Map
+              </button>
+            </div>
           </div>
+
+          {/* Bottom Row on Mobile (Zoom + Rotate) */}
+          <div className="flex flex-col gap-2 max-[768px]:flex-row max-[768px]:justify-between max-[768px]:gap-1">
+            {/* Zoom Controls */}
+            <div className="flex flex-col gap-1 max-[768px]:flex-row max-[768px]:w-2/3 max-[768px]:items-center">
+              <button className="w-full py-1.5 px-3 bg-transparent text-text-primary rounded-lg font-bold transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent max-[768px]:w-auto max-[768px]:px-3 max-[768px]:bg-[rgba(255,255,255,0.05)]" onClick={handleZoomIn} title={t('map.zoomIn')}>+</button>
+              <div className="flex items-center justify-center py-1 text-[0.65rem] font-mono text-text-secondary max-[768px]:px-2 max-[768px]:w-10">{zoomLevel.toFixed(1)}x</div>
+              <button className="w-full py-1.5 px-3 bg-transparent text-text-primary rounded-lg font-bold transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent max-[768px]:w-auto max-[768px]:px-3 max-[768px]:bg-[rgba(255,255,255,0.05)]" onClick={handleZoomOut} title={t('map.zoomOut')}>−</button>
+              <button className="w-full py-1.5 bg-transparent text-text-primary rounded-lg text-xs font-bold transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent max-[768px]:w-auto max-[768px]:px-3 max-[768px]:ml-auto max-[768px]:bg-[rgba(255,255,255,0.05)] max-[768px]:text-[0.6rem]" onClick={handleZoomReset} title={t('map.reset')}>RST</button>
+            </div>
+
+            {/* Rotate Button (Extracted to Bottom Row on Mobile) */}
+            <div className="flex flex-col gap-1 max-[768px]:w-1/3">
+              <button
+                className={`py-1.5 px-3 text-[0.65rem] font-bold tracking-[0.05em] rounded-lg transition-all duration-200 border border-border-main max-[768px]:w-full max-[768px]:h-full max-[768px]:text-[0.6rem] ${isAutoRotating ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981] border-[#10b981]/30' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                onClick={() => setIsAutoRotating(!isAutoRotating)}
+              >
+                {isAutoRotating ? t('map.rotating') : 'PAUSED'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Left Layer Controls Sidebar */}
+      <div className="absolute top-4 z-10 flex flex-col gap-3 left-4 max-[1000px]:top-20 max-[768px]:hidden bg-[rgba(10,14,20,0.85)] backdrop-blur-md rounded-xl border border-border-main p-2 shadow-lg w-[180px]">
+        
+        {/* Layer Presets */}
+        <div className="flex flex-col gap-1 border-b border-border-main pb-2 mb-1">
+          <span className="text-[0.6rem] font-bold tracking-widest text-text-dim px-2 pb-1 mb-1 block">PRESETS</span>
           
-          {/* Individual Layer Toggles */}
-          <div className="flex gap-1 bg-[rgba(10,14,20,0.9)] border border-border-main p-1">
+          <button
+            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${!layerVisibility.shippingChokepoints && !layerVisibility.conflictZones && !layerVisibility.militaryBases ? 'bg-[rgba(99,179,237,0.15)] text-accent' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+            onClick={() => setLayerVisibility(prev => ({
+              ...prev, hotspots: false, intelHotspots: true, shippingChokepoints: false, conflictZones: false, militaryBases: false, nuclearFacilities: false, underseaCables: false, cyberRegions: false
+            }))}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-accent"></span> {t('map.presetIntel')}
+          </button>
+          
+          <button
+            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${layerVisibility.conflictZones && layerVisibility.intelHotspots ? 'bg-[rgba(239,68,68,0.15)] text-red-500' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+            onClick={() => setLayerVisibility(prev => ({
+              ...prev, hotspots: true, intelHotspots: true, shippingChokepoints: false, conflictZones: true, militaryBases: false, nuclearFacilities: false, underseaCables: false, cyberRegions: false
+            }))}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> {t('map.presetConflict')}
+          </button>
+
+          <button
+            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${layerVisibility.shippingChokepoints && layerVisibility.underseaCables ? 'bg-[rgba(245,158,11,0.15)] text-amber-500' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+            onClick={() => setLayerVisibility(prev => ({
+              ...prev, hotspots: false, intelHotspots: false, shippingChokepoints: true, conflictZones: false, militaryBases: false, nuclearFacilities: false, underseaCables: true, cyberRegions: false
+            }))}
+          >
+             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {t('map.presetTrade')}
+          </button>
+
+          <button
+            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${layerVisibility.militaryBases && layerVisibility.nuclearFacilities ? 'bg-[rgba(16,185,129,0.15)] text-emerald-500' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+            onClick={() => setLayerVisibility(prev => ({
+              ...prev, hotspots: false, intelHotspots: true, shippingChokepoints: false, conflictZones: true, militaryBases: true, nuclearFacilities: true, underseaCables: false, cyberRegions: false
+            }))}
+          >
+             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {t('map.presetDefense')}
+          </button>
+        </div>
+        
+        {/* Individual Toggles */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[0.6rem] font-bold tracking-widest text-text-dim px-2 pt-1 pb-1 mb-1 block">LAYERS</span>
+          
+          <div className="grid grid-cols-2 gap-1">
             <button
-              className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.intelHotspots ? '!bg-accent !text-bg-dark' : ''}`}
+              className={`py-1.5 px-2 rounded-md text-[0.6rem] font-bold tracking-wide transition-all duration-200 ${layerVisibility.intelHotspots ? 'bg-panel-item-hover text-accent shadow-[inset_0_0_0_1px_rgba(99,179,237,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
               onClick={() => toggleLayer('intelHotspots')}
-              title={t('map.intelligenceHotspots')}
             >
               {t('map.intel')}
             </button>
             <button
-              className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.hotspots ? '!bg-accent !text-bg-dark' : ''}`}
+              className={`py-1.5 px-2 rounded-md text-[0.6rem] font-bold tracking-wide transition-all duration-200 ${layerVisibility.hotspots ? 'bg-panel-item-hover text-accent shadow-[inset_0_0_0_1px_rgba(99,179,237,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
               onClick={() => toggleLayer('hotspots')}
-              title={t('map.watchZones')}
             >
               {t('map.watch')}
             </button>
             {mapView === 'us' && (
               <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.usCities ? '!bg-accent !text-bg-dark' : ''}`}
+                className={`py-1.5 px-2 rounded-md text-[0.6rem] font-bold tracking-wide transition-all duration-200 ${layerVisibility.usCities ? 'bg-panel-item-hover text-accent shadow-[inset_0_0_0_1px_rgba(99,179,237,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
                 onClick={() => toggleLayer('usCities')}
-                title={t('map.majorCities')}
               >
                 {t('map.cities')}
               </button>
             )}
+            {mapView === 'global' && (
+              <>
+                <button
+                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.conflictZones ? 'bg-[rgba(239,68,68,0.1)] text-red-500 shadow-[inset_0_0_0_1px_rgba(239,68,68,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                  onClick={() => toggleLayer('conflictZones')}
+                >
+                  CONFLICT
+                </button>
+                <button
+                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.shippingChokepoints ? 'bg-[rgba(245,158,11,0.1)] text-amber-500 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                  onClick={() => toggleLayer('shippingChokepoints')}
+                >
+                  SHIPPING
+                </button>
+                <button
+                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.militaryBases ? 'bg-[rgba(16,185,129,0.1)] text-emerald-500 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                  onClick={() => toggleLayer('militaryBases')}
+                >
+                  MILITARY
+                </button>
+                <button
+                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.nuclearFacilities ? 'bg-[rgba(168,85,247,0.1)] text-purple-500 shadow-[inset_0_0_0_1px_rgba(168,85,247,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                  onClick={() => toggleLayer('nuclearFacilities')}
+                >
+                  NUCLEAR
+                </button>
+                <button
+                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.underseaCables ? 'bg-[rgba(56,189,248,0.1)] text-sky-500 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                  onClick={() => toggleLayer('underseaCables')}
+                >
+                  INFRA
+                </button>
+                <button
+                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.cyberRegions ? 'bg-[rgba(236,72,153,0.1)] text-pink-500 shadow-[inset_0_0_0_1px_rgba(236,72,153,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
+                  onClick={() => toggleLayer('cyberRegions')}
+                >
+                  CYBER
+                </button>
+              </>
+            )}
           </div>
-          {mapView === 'global' && (
-            <div className="flex gap-1 bg-[rgba(10,14,20,0.9)] border border-border-main p-1">
-              <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.conflictZones ? '!bg-accent !text-bg-dark' : ''}`}
-                onClick={() => toggleLayer('conflictZones')}
-                title={t('map.activeConflictsTitle')}
-              >
-                {t('map.conflict')}
-              </button>
-              <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.shippingChokepoints ? '!bg-accent !text-bg-dark' : ''}`}
-                onClick={() => toggleLayer('shippingChokepoints')}
-                title={t('map.shippingRoutes')}
-              >
-                {t('map.shipping')}
-              </button>
-              <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.militaryBases ? '!bg-accent !text-bg-dark' : ''}`}
-                onClick={() => toggleLayer('militaryBases')}
-                title={t('map.militaryBases')}
-              >
-                {t('map.military')}
-              </button>
-              <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.nuclearFacilities ? '!bg-accent !text-bg-dark' : ''}`}
-                onClick={() => toggleLayer('nuclearFacilities')}
-                title={t('map.nuclearFacilities')}
-              >
-                {t('map.nuclear')}
-              </button>
-              <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.underseaCables ? '!bg-accent !text-bg-dark' : ''}`}
-                onClick={() => toggleLayer('underseaCables')}
-                title={t('map.underseaCables')}
-              >
-                {t('map.infra')}
-              </button>
-              <button
-                className={`py-1 px-2 bg-transparent text-text-secondary border-none text-[0.65rem] font-bold tracking-[0.5px] cursor-pointer transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent ${layerVisibility.cyberRegions ? '!bg-accent !text-bg-dark' : ''}`}
-                onClick={() => toggleLayer('cyberRegions')}
-                title={t('map.cyberRegions')}
-              >
-                {t('map.cyber')}
-              </button>
-            </div>
-          )}
         </div>
       </div>
       <div className="absolute inset-0 pointer-events-none z-[5]">
@@ -1525,7 +1484,9 @@ const GlobalMap = () => {
       </div>
       <svg ref={svgRef}></svg>
       <HotspotModal selectedHotspot={selectedHotspot} onClose={closePopup} newsLoading={newsLoading} />
-      <TickerStrip mode="geo" />
+      <div className="absolute bottom-0 w-full z-20">
+        <TickerStrip mode="geo" />
+      </div>
     </div>
   )
 }
