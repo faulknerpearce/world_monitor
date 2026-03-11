@@ -14,7 +14,7 @@ const AIRacePanel = () => {
     )
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
             {/* Key Players Chips */}
             <div className="flex gap-2 overflow-x-auto pt-0.5 pb-3 mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {AI_PLAYERS.map((player) => (
@@ -29,15 +29,17 @@ const AIRacePanel = () => {
             </div>
 
             {/* News Feed */}
-            <div className="flex flex-col">
+            <div className="flex-1 overflow-y-auto flex flex-col p-4">
                 {loading && news.length === 0 ? (
                     <div className="p-4 text-center text-text-dim text-[0.8rem]">{t('aiRace.loading')}</div>
                 ) : (
                     news.map((item, idx) => (
-                        <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-[0.45rem] px-4 no-underline border-b border-[rgba(255,255,255,0.03)] transition-colors duration-200 hover:bg-[rgba(6,182,212,0.05)] last:border-b-0">
-                            <span className="text-[0.5rem] text-[#22d3ee] font-semibold uppercase shrink-0 w-16">{item.source}</span>
-                            <span className="text-[0.65rem] text-text-primary flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{item.title}</span>
-                            <span className="text-[0.5rem] text-text-dim font-[family-name:var(--font-mono)] shrink-0">{getTimeAgo(item.date, locale)}</span>
+                        <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer" className="flex flex-col p-3.5 mb-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-lg no-underline transition-all duration-200 hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] hover:-translate-y-0.5 shadow-sm hover:shadow-md group">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[0.65rem] text-[#22d3ee] font-bold uppercase tracking-[0.1em] group-hover:text-cyan-400 transition-colors duration-200">{item.source}</span>
+                                <span className="text-[0.65rem] text-text-dim font-[family-name:var(--font-mono)]">{getTimeAgo(item.date, locale)}</span>
+                            </div>
+                            <span className="text-[0.85rem] text-text-primary leading-relaxed font-medium line-clamp-3 group-hover:text-cyan-400 transition-colors duration-200">{item.title}</span>
                         </a>
                     ))
                 )}

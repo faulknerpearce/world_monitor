@@ -90,8 +90,8 @@ const CryptoPanel = () => {
     }
 
     return (
-        <div className="flex flex-col">
-            <div className="grid grid-cols-4 gap-2 py-2.5 px-3 bg-[rgba(245,158,11,0.05)] border-b border-[rgba(245,158,11,0.1)] max-[768px]:grid-cols-2">
+        <div className="flex flex-col h-full overflow-hidden">
+            <div className="grid grid-cols-4 gap-2 py-2.5 px-3 bg-[rgba(245,158,11,0.05)] border-b border-[rgba(245,158,11,0.1)] max-[768px]:grid-cols-2 shrink-0">
                 <div className="flex flex-col items-center gap-0.5">
                     <span className="text-[0.5rem] text-text-dim uppercase tracking-[0.05em]">{t('blockchain.btcHashrate')}</span>
                     <span className="text-[0.7rem] font-semibold text-text-primary font-[family-name:var(--font-mono)]">{chainData.btcHashrate}</span>
@@ -110,7 +110,7 @@ const CryptoPanel = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex-1 overflow-y-auto flex flex-col">
                 {news.map((item, idx) => (
                     <div key={idx} className="py-2.5 px-4 border-b border-[rgba(255,255,255,0.04)] transition-all duration-200 hover:bg-[rgba(255,255,255,0.03)] last:border-b-0">
                         <div className="text-[0.7rem] text-[#f59e0b] font-semibold uppercase tracking-[0.08em] mb-0.5">{item.source}</div>
