@@ -1,64 +1,12 @@
-import { fetchWithProxy, parseRSS } from '@utils/fetchUtils.js'
-import { FEED_CONFIG } from '@features/news/feedConfig.js'
+import { fetchAndParseFeed } from '@utils/fetchUtils'
 
 /**
- * Service for fetching map-related news feeds
- * Handles intel, politics, and government feeds used by the global map
+ * Service for fetching map-related news feeds.
+ * Exposes on-demand helpers used by the global map for hotspot-specific
+ * Google News lookups. All requests go through the shared parsed-feed
+ * cache so two hotspots with the same search query share a single fetch.
  */
 export class MapFeedService {
-  /**
-   * Fetch all news feeds relevant to the map
-   * @returns {Promise<Array>} Array of parsed news items
-   */
-  static async fetchMapNews() {
-    try {
-      const feedsToFetch = [
-        ...FEED_CONFIG.news.intel,
-        ...FEED_CONFIG.news.politics,
-        ...FEED_CONFIG.news.gov
-      ]
-
-      const results = await Promise.allSettled(feedsToFetch.map(async (feed) => {
-        try {
-          const xmlText = await fetchWithProxy(feed.url)
-          const items = parseRSS(xmlText)
-
-          return items.slice(0, 5).map(item => ({
-            ...item,
-            source: feed.name
-          }))
-        } catch (e) {
-          console.error(`Failed to fetch ${feed.name}`, e)
-          return []
-        }
-      }))
-
-      const flattened = results
-        .filter(r => r.status === 'fulfilled')
-        .flatMap(r => r.value)
-
-      // Also fetch Google News for specific hotspots
-      const googleNewsResults = await Promise.allSettled([
-        this.fetchGoogleNews('washington dc politics'),
-        this.fetchGoogleNews('us politics trump biden'),
-        this.fetchGoogleNews('pentagon military news'),
-        this.fetchGoogleNews('venezuela maduro caracas'),
-        this.fetchGoogleNews('ukraine russia putin'),
-        this.fetchGoogleNews('israel gaza hamas'),
-        this.fetchGoogleNews('taiwan china strait')
-      ])
-
-      const googleNews = googleNewsResults
-        .filter(r => r.status === 'fulfilled')
-        .flatMap(r => r.value)
-
-      return [...flattened, ...googleNews]
-    } catch (e) {
-      console.error('Error fetching map news:', e)
-      return []
-    }
-  }
-
   /**
    * Fetch Google News for a specific query
    * @param {string} query - Search query
@@ -68,8 +16,7 @@ export class MapFeedService {
     try {
       const searchTerms = encodeURIComponent(query)
       const rssUrl = `https://news.google.com/rss/search?q=${searchTerms}&hl=en-US&gl=US&ceid=US:en`
-      const xmlText = await fetchWithProxy(rssUrl)
-      const items = parseRSS(xmlText)
+      const items = await fetchAndParseFeed(rssUrl)
 
       return items.slice(0, 3).map(item => ({
         ...item,

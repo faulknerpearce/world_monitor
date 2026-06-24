@@ -4,39 +4,34 @@ import * as topojson from 'topojson-client'
 import {
   US_CITIES, SHIPPING_CHOKEPOINTS, MILITARY_BASES,
   NUCLEAR_FACILITIES, UNDERSEA_CABLES, CYBER_REGIONS
-} from '@config/regions.js'
+} from '@config/regions'
 import { MapFeedService } from './mapFeedService'
 import { useDynamicRegions } from '@hooks/useDynamicRegions'
+import { useDynamicHotspots } from '@hooks/useDynamicHotspots'
+import { useMapData } from './hooks/useMapData'
 import { useI18n } from '@context/I18nContext'
 import HotspotModal from './HotspotModal'
-import TickerStrip from '@features/markets/TickerStrip'
-
-// Centralized color palette for map markers based on severity level.
-// Keeps a single source of truth so every marker type stays visually consistent.
-const MARKER_COLORS = {
-  critical: '#ef4444',  // red
-  high:     '#ef4444',  // red
-  elevated: '#f59e0b',  // amber / yellow
-  medium:   '#22c55e',  // green
-  low:      '#22c55e',  // green
-}
-
-/**
- * Return the marker colour for a given severity string.
- * Falls back to green when the severity is unknown.
- */
-const getMarkerColor = (severity) => MARKER_COLORS[severity] || MARKER_COLORS.medium
+import { TickerStrip } from '@features/markets'
+import MapViewControls from './MapViewControls'
+import MapLayerControls from './MapLayerControls'
+import {
+  MARKER_COLORS,
+  getMarkerColor,
+  MAX_ZOOM,
+  DEFAULT_LAYER_VISIBILITY,
+  createGlobeDrag,
+  safeClick,
+} from './mapHelpers'
 
 const GlobalMap = () => {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const rotationRef = useRef([0, 0]) // Ref to track rotation for drag callbacks
+  const renderMapRef = useRef(null) // Holds the latest renderMap for use inside the render effect
   const { t, locale } = useI18n()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { loading, error, worldData, usData, reload } = useMapData()
+  const [renderError, setRenderError] = useState(null)
   const [mapView, setMapView] = useState('global') // 'global' or 'us'
-  const [worldData, setWorldData] = useState(null)
-  const [usData, setUsData] = useState(null)
   const [selectedHotspot, setSelectedHotspot] = useState(null)
   const [newsLoading, setNewsLoading] = useState(false)
   const isDraggingRef = useRef(false) // Ref so D3 closures always read the latest value
@@ -45,6 +40,7 @@ const GlobalMap = () => {
 
   // Use dynamic regions hook
   const { hotspots, intelHotspots, usHotspots, conflictZones, lastUpdated } = useDynamicRegions()
+  const { emergingHotspots, error: gdeltError } = useDynamicHotspots()
 
   // Handle projection mode changes - reset appropriate state
   const handleProjectionModeChange = (mode) => {
@@ -78,28 +74,13 @@ const GlobalMap = () => {
   const [translation, setTranslation] = useState([0, 0])
   const [rotation, setRotation] = useState([0, 0]) // [longitude, latitude] rotation for globe
   const [projectionMode, setProjectionMode] = useState('3d') // '3d' or 'flat'
-  const MAX_ZOOM = 3.5 // Prevent zooming too close into the globe
 
   // Auto-rotation state
   const [isAutoRotating, setIsAutoRotating] = useState(true)
   const [isUserInteracting, setIsUserInteracting] = useState(false)
 
   // Layer visibility state
-  const [layerVisibility, setLayerVisibility] = useState({
-    hotspots: false,
-    intelHotspots: true,
-    shippingChokepoints: false,
-    conflictZones: false,
-    militaryBases: false,
-    nuclearFacilities: false,
-    underseaCables: false,
-    cyberRegions: false,
-    usCities: false
-  })
-
-  useEffect(() => {
-    loadMapData()
-  }, [])
+  const [layerVisibility, setLayerVisibility] = useState(DEFAULT_LAYER_VISIBILITY)
 
   // Update layer visibility based on map view
   useEffect(() => {
@@ -110,84 +91,122 @@ const GlobalMap = () => {
     }))
   }, [mapView])
 
-  // Auto-rotation effect - slow ambient spin when idle
+  // Auto-rotation effect - slow ambient spin when idle. Uses
+  // requestAnimationFrame so the loop is paused while the tab is backgrounded
+  // (the previous `setInterval(50)` continued firing in hidden tabs).
   useEffect(() => {
     if (!isAutoRotating || isUserInteracting || mapView !== 'global' || zoomLevel > MAX_ZOOM) {
       return
     }
 
     const rotationSpeed = 0.15 // degrees per frame
-    const interval = setInterval(() => {
-      setRotation(prev => {
-        const newRotation = [prev[0] + rotationSpeed, prev[1]]
-        rotationRef.current = newRotation
-        return newRotation
-      })
-    }, 50)
+    let rafId
+    let lastTime = performance.now()
+    const tick = (now) => {
+      const delta = now - lastTime
+      if (delta >= 50) {
+        lastTime = now - (delta % 50)
+        const current = rotationRef.current
+        rotationRef.current = [current[0] + rotationSpeed, current[1]]
+        renderMapRef.current?.()
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
 
-    return () => clearInterval(interval)
+    return () => cancelAnimationFrame(rafId)
   }, [isAutoRotating, isUserInteracting, mapView, zoomLevel])
+
+  // Keyboard navigation: +/- for zoom, arrow keys for pan (flat) or
+  // rotate (3D), 0 / r to reset. Only active when the map SVG (or one
+  // of its descendants) has focus, so the keyboard shortcuts don't
+  // collide with other input on the page.
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const target = e.target
+      if (!(target instanceof Element)) return
+      if (!target.closest('[data-map-keyboard-target]')) return
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+
+      const isGlobe = mapView === 'global' && projectionMode !== 'flat'
+
+      if (e.key === '+' || e.key === '=' || e.key === ']') {
+        e.preventDefault()
+        if (isGlobe) {
+          setZoomLevel(z => Math.min(z * 1.2, MAX_ZOOM))
+        } else {
+          setZoomLevel(z => Math.min(z * 1.2, MAX_ZOOM))
+        }
+      } else if (e.key === '-' || e.key === '_' || e.key === '[') {
+        e.preventDefault()
+        if (isGlobe) {
+          setZoomLevel(z => Math.max(z / 1.2, 1))
+        } else {
+          setZoomLevel(z => Math.max(z / 1.2, 1))
+        }
+      } else if (e.key === '0' || e.key === 'r' || e.key === 'R') {
+        e.preventDefault()
+        setZoomLevel(1)
+        setTranslation([0, 0])
+        if (isGlobe) {
+          rotationRef.current = [0, 0]
+          setRotation([0, 0])
+          renderMapRef.current?.()
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        if (isGlobe) {
+          const current = rotationRef.current
+          const dx = e.key === 'ArrowLeft' ? -5 : e.key === 'ArrowRight' ? 5 : 0
+          const dy = e.key === 'ArrowUp' ? 5 : e.key === 'ArrowDown' ? -5 : 0
+          const next = [current[0] + dx, current[1] + dy]
+          rotationRef.current = next
+          setRotation(next)
+          renderMapRef.current?.()
+        } else {
+          // Pan in flat mode: 20px per arrow press.
+          const dx = e.key === 'ArrowLeft' ? -20 : e.key === 'ArrowRight' ? 20 : 0
+          const dy = e.key === 'ArrowUp' ? -20 : e.key === 'ArrowDown' ? 20 : 0
+          setTranslation(prev => [prev[0] + dx, prev[1] + dy])
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mapView, projectionMode])
 
   useEffect(() => {
     try {
       if (mapView === 'global' && worldData && worldData.objects && worldData.objects.countries) {
-        renderMap()
+        renderMapRef.current?.()
       } else if (mapView === 'us' && usData && usData.objects && usData.objects.states) {
-        renderMap()
+        renderMapRef.current?.()
       }
     } catch (error) {
       console.error('Error in map render effect:', error)
-      setError(t('map.failedRender'))
+      setRenderError(t('map.failedRender'))
     }
-    // Only re-render when essential dependencies change - lastUpdated timestamp handles dynamic data updates
-  }, [worldData, usData, mapView, zoomLevel, translation, rotation, layerVisibility, lastUpdated, t])
+  }, [worldData, usData, mapView, zoomLevel, translation, projectionMode, layerVisibility, lastUpdated, t, hotspots, intelHotspots, usHotspots, conflictZones, emergingHotspots])
 
-  const loadMapData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Load world map topology data
-      const worldResponse = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-      if (!worldResponse.ok) {
-        throw new Error(`Failed to fetch world map: ${worldResponse.status}`)
-      }
-      const world = await worldResponse.json()
-      setWorldData(world)
-
-      // Load US map topology data
-      const usResponse = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
-      if (!usResponse.ok) {
-        throw new Error(`Failed to fetch US map: ${usResponse.status}`)
-      }
-      const us = await usResponse.json()
-      setUsData(us)
-
-      setError(null)
-    } catch (e) {
-      console.error('Failed to load map:', e)
-      setError(t('map.failedLoadData', { message: e.message }))
-    } finally {
-      setLoading(false)
-    }
-  }
+  const redrawGlobe = () => renderMapRef.current?.()
 
   const renderMap = () => {
     try {
       if (!containerRef.current || !svgRef.current) return
+      setRenderError(null)
       if (mapView === 'global' && !worldData) return
       if (mapView === 'us' && !usData) return
 
       // Additional validation
       if (mapView === 'global' && (!worldData.objects || !worldData.objects.countries)) {
         console.error('Invalid world data structure')
-        setError(t('map.invalidData'))
+        setRenderError(t('map.invalidData'))
         return
       }
 
       if (mapView === 'us' && (!usData.objects || !usData.objects.states)) {
         console.error('Invalid US data structure')
-        setError(t('map.invalidData'))
+        setRenderError(t('map.invalidData'))
         return
       }
 
@@ -215,7 +234,7 @@ const GlobalMap = () => {
             .scale((minDimension / 2.2) * zoomLevel)
             .translate([width / 2, height / 2])
             .center([0, 0])
-            .rotate(rotation)
+            .rotate(rotationRef.current)
         } else {
           // Natural earth projection for flat view
           projection = d3.geoNaturalEarth1()
@@ -234,9 +253,13 @@ const GlobalMap = () => {
       // Helper: check if a point is on the visible side of the globe (only for 3D mode)
       const isMarkerVisible = (lon, lat) => {
         if (mapView !== 'global' || projectionMode === 'flat') return true
-        const center = [-rotation[0], -rotation[1]]
+        const center = [-rotationRef.current[0], -rotationRef.current[1]]
         return d3.geoDistance([lon, lat], center) < Math.PI / 2
       }
+
+      const globeDrag = createGlobeDrag(svgRef, zoomLevel, rotationRef, setRotation, isDraggingRef, {
+        onRotate: redrawGlobe,
+      })
 
       // Background
       svg.append('rect')
@@ -295,35 +318,12 @@ const GlobalMap = () => {
             .style('cursor', 'grab')
             .style('pointer-events', 'all')
 
-          // Attach drag behavior to sphere
-          const drag = d3.drag()
-            .container(function () { return svgRef.current })
-            .clickDistance(5) // Ignore drags smaller than 5 pixels (treats them as clicks)
-            .on('start', function (event) {
-              event.sourceEvent.stopPropagation()
-              isDraggingRef.current = false
-              d3.select(this).style('cursor', 'grabbing')
-            })
-            .on('drag', function (event) {
-              event.sourceEvent.stopPropagation()
-              isDraggingRef.current = true
-              // Scale sensitivity based on zoom level - higher zoom = lower sensitivity for finer control
-              const sensitivity = 0.5 / zoomLevel
-              const currentRotation = rotationRef.current
-              const newRotation = [
-                currentRotation[0] + event.dx * sensitivity,
-                Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-              ]
-              rotationRef.current = newRotation
-              setRotation(newRotation)
-            })
-            .on('end', function (event) {
-              event.sourceEvent.stopPropagation()
-              d3.select(this).style('cursor', 'grab')
-              setTimeout(() => isDraggingRef.current = false, 50)
-            })
-
-          sphere.call(drag)
+          sphere.call(createGlobeDrag(svgRef, zoomLevel, rotationRef, setRotation, isDraggingRef, {
+            clickDistance: 5,
+            onRotate: redrawGlobe,
+            onStart: (event) => d3.select(event.sourceEvent.target).style('cursor', 'grabbing'),
+            onEnd: (event) => d3.select(event.sourceEvent.target).style('cursor', 'grab')
+          }))
         }
 
         const smallGrid = defs.append('pattern')
@@ -382,29 +382,7 @@ const GlobalMap = () => {
           .attr('stroke', 'var(--map-stroke)')
           .attr('stroke-width', 0.5)
           .style('pointer-events', 'visiblePainted')
-          .call(d3.drag()
-            .container(function () { return svgRef.current })
-            .on('start', function (event) {
-              event.sourceEvent.stopPropagation()
-              isDraggingRef.current = false
-            })
-            .on('drag', function (event) {
-              event.sourceEvent.stopPropagation()
-              isDraggingRef.current = true
-              const sensitivity = 0.5 / zoomLevel
-              const currentRotation = rotationRef.current
-              const newRotation = [
-                currentRotation[0] + event.dx * sensitivity,
-                Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-              ]
-              rotationRef.current = newRotation
-              setRotation(newRotation)
-            })
-            .on('end', function (event) {
-              event.sourceEvent.stopPropagation()
-              setTimeout(() => isDraggingRef.current = false, 50)
-            })
-          )
+          .call(globeDrag)
       }
 
       // Note: Sphere was rendered earlier for ocean visual.
@@ -441,31 +419,13 @@ const GlobalMap = () => {
               .attr('transform', `translate(${x},${y})`)
               .style('cursor', 'pointer')
 
-            group.on('click', () => {
-              if (!isDraggingRef.current) handleHotspotClick({
-                ...city,
-                type: 'city',
-                severity: city.type === 'capital' ? 'high' : city.type === 'military' ? 'elevated' : 'medium'
-              })
-            })
+            group.on('click', safeClick(() => handleHotspotClick({
+              ...city,
+              type: 'city',
+              severity: city.type === 'capital' ? 'high' : city.type === 'military' ? 'elevated' : 'medium'
+            }), isDraggingRef))
 
-            group.call(d3.drag()
-              .container(function () { return svgRef.current })
-              .on('start', () => isDraggingRef.current = false)
-              .on('drag', (event) => {
-                event.sourceEvent.stopPropagation()
-                isDraggingRef.current = true
-                const sensitivity = 0.5 / zoomLevel
-                const currentRotation = rotationRef.current
-                const newRotation = [
-                  currentRotation[0] + event.dx * sensitivity,
-                  Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-                ]
-                rotationRef.current = newRotation
-                setRotation(newRotation)
-              })
-              .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-            )
+            group.call(globeDrag)
 
             group.append('circle')
               .attr('class', 'us-city-dot')
@@ -500,27 +460,9 @@ const GlobalMap = () => {
             .attr('transform', `translate(${x},${y})`)
             .style('cursor', 'pointer')
 
-          group.on('click', () => {
-            if (!isDraggingRef.current) handleHotspotClick(hotspot)
-          })
+          group.on('click', safeClick(() => handleHotspotClick(hotspot), isDraggingRef))
 
-          group.call(d3.drag()
-            .container(function () { return svgRef.current })
-            .on('start', () => isDraggingRef.current = false)
-            .on('drag', (event) => {
-              event.sourceEvent.stopPropagation()
-              isDraggingRef.current = true
-              const sensitivity = 0.5 / zoomLevel
-              const currentRotation = rotationRef.current
-              const newRotation = [
-                currentRotation[0] + event.dx * sensitivity,
-                Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-              ]
-              rotationRef.current = newRotation
-              setRotation(newRotation)
-            })
-            .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-          )
+          group.call(globeDrag)
 
           // Pulsing ring
           group.append('circle')
@@ -561,27 +503,9 @@ const GlobalMap = () => {
               .attr('transform', `translate(${x},${y})`)
               .style('cursor', 'pointer')
 
-            g.on('click', () => {
-              if (!isDraggingRef.current) handleHotspotClick({ ...point, type: 'chokepoint' })
-            })
+            g.on('click', safeClick(() => handleHotspotClick({ ...point, type: 'chokepoint' }), isDraggingRef))
 
-            g.call(d3.drag()
-              .container(function () { return svgRef.current })
-              .on('start', () => isDraggingRef.current = false)
-              .on('drag', (event) => {
-                event.sourceEvent.stopPropagation()
-                isDraggingRef.current = true
-                const sensitivity = 0.5 / zoomLevel
-                const currentRotation = rotationRef.current
-                const newRotation = [
-                  currentRotation[0] + event.dx * sensitivity,
-                  Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-                ]
-                rotationRef.current = newRotation
-                setRotation(newRotation)
-              })
-              .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-            )
+            g.call(globeDrag)
 
             g.append('rect')
               .attr('x', -6).attr('y', -6)
@@ -608,27 +532,9 @@ const GlobalMap = () => {
               .attr('transform', `translate(${x},${y})`)
               .style('cursor', 'pointer')
 
-            g.on('click', () => {
-              if (!isDraggingRef.current) handleHotspotClick({ ...zone, type: 'conflict' })
-            })
+            g.on('click', safeClick(() => handleHotspotClick({ ...zone, type: 'conflict' }), isDraggingRef))
 
-            g.call(d3.drag()
-              .container(function () { return svgRef.current })
-              .on('start', () => isDraggingRef.current = false)
-              .on('drag', (event) => {
-                event.sourceEvent.stopPropagation()
-                isDraggingRef.current = true
-                const sensitivity = 0.5 / zoomLevel
-                const currentRotation = rotationRef.current
-                const newRotation = [
-                  currentRotation[0] + event.dx * sensitivity,
-                  Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-                ]
-                rotationRef.current = newRotation
-                setRotation(newRotation)
-              })
-              .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-            )
+            g.call(globeDrag)
 
             g.append('circle')
               .attr('r', 10)
@@ -657,27 +563,9 @@ const GlobalMap = () => {
               .attr('transform', `translate(${x},${y})`)
               .style('cursor', 'pointer')
 
-            g.on('click', () => {
-              if (!isDraggingRef.current) handleHotspotClick({ ...base, type: 'base' })
-            })
+            g.on('click', safeClick(() => handleHotspotClick({ ...base, type: 'base' }), isDraggingRef))
 
-            g.call(d3.drag()
-              .container(function () { return svgRef.current })
-              .on('start', () => isDraggingRef.current = false)
-              .on('drag', (event) => {
-                event.sourceEvent.stopPropagation()
-                isDraggingRef.current = true
-                const sensitivity = 0.5 / zoomLevel
-                const currentRotation = rotationRef.current
-                const newRotation = [
-                  currentRotation[0] + event.dx * sensitivity,
-                  Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-                ]
-                rotationRef.current = newRotation
-                setRotation(newRotation)
-              })
-              .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-            )
+            g.call(globeDrag)
 
             g.append('circle')
               .attr('r', 6)
@@ -698,27 +586,9 @@ const GlobalMap = () => {
               .attr('transform', `translate(${x},${y})`)
               .style('cursor', 'pointer')
 
-            g.on('click', () => {
-              if (!isDraggingRef.current) handleHotspotClick({ ...nuc, type: 'nuclear' })
-            })
+            g.on('click', safeClick(() => handleHotspotClick({ ...nuc, type: 'nuclear' }), isDraggingRef))
 
-            g.call(d3.drag()
-              .container(function () { return svgRef.current })
-              .on('start', () => isDraggingRef.current = false)
-              .on('drag', (event) => {
-                event.sourceEvent.stopPropagation()
-                isDraggingRef.current = true
-                const sensitivity = 0.5 / zoomLevel
-                const currentRotation = rotationRef.current
-                const newRotation = [
-                  currentRotation[0] + event.dx * sensitivity,
-                  Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-                ]
-                rotationRef.current = newRotation
-                setRotation(newRotation)
-              })
-              .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-            )
+            g.call(globeDrag)
 
             g.append('circle').attr('r', 4).attr('fill', '#ffff00').attr('stroke', '#000')
 
@@ -769,27 +639,9 @@ const GlobalMap = () => {
               .attr('transform', `translate(${x},${y})`)
               .style('cursor', 'pointer')
 
-            g.on('click', () => {
-              if (!isDraggingRef.current) handleHotspotClick({ ...reg, type: 'cyber' })
-            })
+            g.on('click', safeClick(() => handleHotspotClick({ ...reg, type: 'cyber' }), isDraggingRef))
 
-            g.call(d3.drag()
-              .container(function () { return svgRef.current })
-              .on('start', () => isDraggingRef.current = false)
-              .on('drag', (event) => {
-                event.sourceEvent.stopPropagation()
-                isDraggingRef.current = true
-                const sensitivity = 0.5 / zoomLevel
-                const currentRotation = rotationRef.current
-                const newRotation = [
-                  currentRotation[0] + event.dx * sensitivity,
-                  Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-                ]
-                rotationRef.current = newRotation
-                setRotation(newRotation)
-              })
-              .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-            )
+            g.call(globeDrag)
 
             g.append('rect')
               .attr('x', -8).attr('y', -8)
@@ -847,7 +699,7 @@ const GlobalMap = () => {
           .attr('class', 'tooltip-header')
           .attr('x', 12)
           .attr('y', 20)
-          .attr('fill', '#00ff88')
+          .attr('fill', 'var(--green)')
           .attr('font-size', '12px')
           .attr('font-weight', '700')
           .attr('text-transform', 'uppercase')
@@ -883,8 +735,8 @@ const GlobalMap = () => {
           .attr('class', 'tooltip-show-more-bg')
           .attr('rx', 2)
           .attr('ry', 2)
-          .attr('fill', 'rgba(0, 255, 136, 0.2)')
-          .attr('stroke', '#00ff88')
+          .attr('fill', 'var(--green-dim)')
+          .attr('stroke', 'var(--green)')
           .attr('stroke-width', 1)
           .style('display', 'none')
           .style('cursor', 'pointer')
@@ -893,7 +745,7 @@ const GlobalMap = () => {
         // Show More button text
         tooltip.append('text')
           .attr('class', 'tooltip-show-more-text')
-          .attr('fill', '#00ff88')
+          .attr('fill', 'var(--green)')
           .attr('font-size', '9px')
           .attr('font-weight', '700')
           .attr('text-anchor', 'middle')
@@ -1070,23 +922,7 @@ const GlobalMap = () => {
             }, 150)
           })
 
-          group.call(d3.drag()
-            .container(function () { return svgRef.current })
-            .on('start', () => isDraggingRef.current = false)
-            .on('drag', (event) => {
-              event.sourceEvent.stopPropagation()
-              isDraggingRef.current = true
-              const sensitivity = 0.5 / zoomLevel
-              const currentRotation = rotationRef.current
-              const newRotation = [
-                currentRotation[0] + event.dx * sensitivity,
-                Math.max(-90, Math.min(90, currentRotation[1] - event.dy * sensitivity))
-              ]
-              rotationRef.current = newRotation
-              setRotation(newRotation)
-            })
-            .on('end', () => setTimeout(() => isDraggingRef.current = false, 50))
-          )
+          group.call(globeDrag)
 
           // Pulsing ring
           group.append('circle')
@@ -1111,6 +947,51 @@ const GlobalMap = () => {
             .attr('font-weight', '600')
             .text(intel.name)
         })
+      }
+
+      // Emerging Hotspots (GDELT-driven). Drawn on top of every other
+      // layer so they stand out as new events not yet covered by the
+      // static region dataset. Global view only — the marker design
+      // (orange pulse + ⚡ label) is meaningless on a US-only map.
+      if (layerVisibility.emergingHotspots && mapView === 'global' && emergingHotspots.length > 0) {
+        const emergingGroup = svg.append('g').attr('class', 'emerging-hotspots')
+
+        emergingGroup.selectAll('circle.emerging-marker')
+          .data(emergingHotspots)
+          .enter()
+          .append('circle')
+          .attr('class', 'emerging-marker hotspot-fast-pulse')
+          .attr('cx', (d) => {
+            const coords = projection([d.lon, d.lat])
+            return coords ? coords[0] : null
+          })
+          .attr('cy', (d) => {
+            const coords = projection([d.lon, d.lat])
+            return coords ? coords[1] : null
+          })
+          .attr('r', 7)
+          .attr('fill', '#ff6b35')
+          .attr('fill-opacity', 0.85)
+          .attr('stroke', '#ff6b35')
+          .attr('stroke-width', 1.5)
+          .style('cursor', 'pointer')
+          .style('pointer-events', 'all')
+          .on('click', (event, d) => {
+            event.stopPropagation()
+            if (!isDraggingRef.current) {
+              setSelectedHotspot({
+                id: d.id,
+                name: d.name,
+                location: d.actors.join(' / ') || t('map.emerging'),
+                description: t('map.emergingDescription', { mentions: d.mentions }),
+                lat: d.lat,
+                lon: d.lon,
+                severity: d.severity,
+                source: 'GDELT',
+                news: [],
+              })
+            }
+          })
       }
 
       // Add pan/zoom for flat mode or US view
@@ -1186,9 +1067,15 @@ const GlobalMap = () => {
       prevZoomLevelRef.current = isFlatMode ? -1 : zoomLevel
     } catch (error) {
       console.error('Error rendering map:', error)
-      setError(`${t('map.failedRender')}: ${error.message}`)
+      setRenderError(`${t('map.failedRender')}: ${error.message}`)
     }
   }
+
+  // Keep renderMapRef in sync with the latest renderMap closure so the render
+  // effect can invoke it without needing it in the dep array. renderMap reads
+  // many component state values; updating via ref means the effect's deps
+  // remain an accurate description of what triggers a full SVG rebuild.
+  renderMapRef.current = renderMap
 
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev * 1.2, MAX_ZOOM))
@@ -1267,10 +1154,17 @@ const GlobalMap = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 w-full h-full gap-4 text-text-secondary">
-        <div className="text-3xl">!</div>
+      <div
+        className="flex flex-col items-center justify-center flex-1 w-full h-full gap-4 text-text-secondary"
+        role="alert"
+        aria-live="assertive"
+      >
+        <div className="text-3xl" aria-hidden="true">!</div>
         <div>{error}</div>
-        <button onClick={loadMapData} style={{ marginTop: '10px', padding: '5px 10px', cursor: 'pointer' }}>
+        <button
+          onClick={reload}
+          className="mt-2.5 px-2.5 py-1.5 cursor-pointer bg-accent text-bg-dark border-none rounded font-semibold hover:opacity-90"
+        >
           {t('common.retry')}
         </button>
       </div>
@@ -1296,179 +1190,43 @@ const GlobalMap = () => {
 
   return (
     <div className="global-map-container relative h-full w-full flex-1 bg-[linear-gradient(135deg,#0a1419_0%,#020a08_100%)] overflow-hidden" ref={containerRef}>
+      {renderError && (
+        <div
+          className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-2 bg-[rgba(10,14,20,0.9)] border border-red-500/50 rounded text-sm text-red-300 max-w-md text-center"
+          role="alert"
+          aria-live="assertive"
+        >
+          {renderError}
+        </div>
+      )}
+      {gdeltError && (
+        <div
+          className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 bg-[rgba(10,14,20,0.85)] border border-orange-500/40 rounded text-xs text-orange-300 max-w-md text-center"
+          role="status"
+        >
+          {t('map.emerging')}: {gdeltError.message || String(gdeltError)}
+        </div>
+      )}
       {/* Right Controls Sidebar */}
-      <div className="absolute top-4 z-10 flex flex-col gap-2 right-4 max-[1000px]:top-20 max-[768px]:top-auto max-[768px]:bottom-[50px] max-[768px]:left-1/2 max-[768px]:-translate-x-1/2 max-[768px]:right-auto max-[768px]:w-[95%] max-[768px]:max-w-[400px] bg-[rgba(10,14,20,0.85)] backdrop-blur-md rounded-xl border border-border-main p-1.5 shadow-lg">
-        
-        <div className="flex flex-col gap-2 max-[768px]:flex-col max-[768px]:gap-1.5">
-          {/* Top Row on Mobile (Region + Projection) */}
-          <div className="flex flex-col gap-2 max-[768px]:flex-row max-[768px]:justify-between max-[768px]:gap-1 border-b border-border-main pb-1.5 max-[768px]:pb-1.5">
-            {/* Region Toggle */}
-            <div className="flex flex-col gap-1 max-[768px]:flex-row max-[768px]:w-1/2 max-[768px]:border-r max-[768px]:border-border-main max-[768px]:pr-1">
-              <button
-                className={`py-2 px-3 text-xs font-bold tracking-[1px] rounded-lg transition-all duration-200 text-left max-[768px]:w-1/2 max-[768px]:text-[0.6rem] max-[768px]:py-1.5 max-[768px]:px-1 max-[768px]:text-center ${mapView === 'global' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
-                onClick={() => setMapView('global')}
-              >
-                {t('map.global')}
-              </button>
-              <button
-                className={`py-2 px-3 text-xs font-bold tracking-[1px] rounded-lg transition-all duration-200 text-left max-[768px]:w-1/2 max-[768px]:text-[0.6rem] max-[768px]:py-1.5 max-[768px]:px-1 max-[768px]:text-center ${mapView === 'us' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
-                onClick={() => setMapView('us')}
-              >
-                {t('map.us')}
-              </button>
-            </div>
-
-            {/* Projection Controls */}
-            <div className="flex flex-col gap-1 max-[768px]:flex-row max-[768px]:w-1/2 max-[768px]:pl-1">
-              <button
-                className={`py-1.5 px-3 text-[0.65rem] font-bold tracking-[0.05em] rounded-lg transition-all duration-200 max-[768px]:w-1/2 max-[768px]:text-[0.55rem] max-[768px]:px-1 ${projectionMode === '3d' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
-                onClick={() => handleProjectionModeChange('3d')}
-              >
-                3D Globe
-              </button>
-              <button
-                className={`py-1.5 px-3 text-[0.65rem] font-bold tracking-[0.05em] rounded-lg transition-all duration-200 max-[768px]:w-1/2 max-[768px]:text-[0.55rem] max-[768px]:px-1 ${projectionMode === 'flat' ? 'bg-accent text-bg-dark' : 'text-text-secondary hover:bg-[rgba(99,179,237,0.1)] hover:text-accent'}`}
-                onClick={() => handleProjectionModeChange('flat')}
-              >
-                Flat Map
-              </button>
-            </div>
-          </div>
-
-          {/* Bottom Row on Mobile (Zoom + Rotate) */}
-          <div className="flex flex-col gap-2 max-[768px]:flex-row max-[768px]:justify-between max-[768px]:gap-1">
-            {/* Zoom Controls */}
-            <div className="flex flex-col gap-1 max-[768px]:flex-row max-[768px]:w-2/3 max-[768px]:items-center">
-              <button className="w-full py-1.5 px-3 bg-transparent text-text-primary rounded-lg font-bold transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent max-[768px]:w-auto max-[768px]:px-3 max-[768px]:bg-[rgba(255,255,255,0.05)]" onClick={handleZoomIn} title={t('map.zoomIn')}>+</button>
-              <div className="flex items-center justify-center py-1 text-[0.65rem] font-mono text-text-secondary max-[768px]:px-2 max-[768px]:w-10">{zoomLevel.toFixed(1)}x</div>
-              <button className="w-full py-1.5 px-3 bg-transparent text-text-primary rounded-lg font-bold transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent max-[768px]:w-auto max-[768px]:px-3 max-[768px]:bg-[rgba(255,255,255,0.05)]" onClick={handleZoomOut} title={t('map.zoomOut')}>−</button>
-              <button className="w-full py-1.5 bg-transparent text-text-primary rounded-lg text-xs font-bold transition-all duration-200 hover:bg-[rgba(99,179,237,0.1)] hover:text-accent max-[768px]:w-auto max-[768px]:px-3 max-[768px]:ml-auto max-[768px]:bg-[rgba(255,255,255,0.05)] max-[768px]:text-[0.6rem]" onClick={handleZoomReset} title={t('map.reset')}>RST</button>
-            </div>
-
-            {/* Rotate Button (Extracted to Bottom Row on Mobile) */}
-            <div className="flex flex-col gap-1 max-[768px]:w-1/3">
-              <button
-                className={`py-1.5 px-3 text-[0.65rem] font-bold tracking-[0.05em] rounded-lg transition-all duration-200 border border-border-main max-[768px]:w-full max-[768px]:h-full max-[768px]:text-[0.6rem] ${isAutoRotating ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981] border-[#10b981]/30' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                onClick={() => setIsAutoRotating(!isAutoRotating)}
-              >
-                {isAutoRotating ? t('map.rotating') : 'PAUSED'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <MapViewControls
+        mapView={mapView}
+        setMapView={setMapView}
+        projectionMode={projectionMode}
+        onProjectionModeChange={handleProjectionModeChange}
+        zoomLevel={zoomLevel}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
+        isAutoRotating={isAutoRotating}
+        setIsAutoRotating={setIsAutoRotating}
+      />
       {/* Left Layer Controls Sidebar */}
-      <div className="absolute top-4 z-10 flex flex-col gap-3 left-4 max-[1000px]:top-20 max-[768px]:hidden bg-[rgba(10,14,20,0.85)] backdrop-blur-md rounded-xl border border-border-main p-2 shadow-lg w-[180px]">
-        
-        {/* Layer Presets */}
-        <div className="flex flex-col gap-1 border-b border-border-main pb-2 mb-1">
-          <span className="text-[0.6rem] font-bold tracking-widest text-text-dim px-2 pb-1 mb-1 block">PRESETS</span>
-          
-          <button
-            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${!layerVisibility.shippingChokepoints && !layerVisibility.conflictZones && !layerVisibility.militaryBases ? 'bg-[rgba(99,179,237,0.15)] text-accent' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-            onClick={() => setLayerVisibility(prev => ({
-              ...prev, hotspots: false, intelHotspots: true, shippingChokepoints: false, conflictZones: false, militaryBases: false, nuclearFacilities: false, underseaCables: false, cyberRegions: false
-            }))}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-accent"></span> {t('map.presetIntel')}
-          </button>
-          
-          <button
-            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${layerVisibility.conflictZones && layerVisibility.intelHotspots ? 'bg-[rgba(239,68,68,0.15)] text-red-500' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-            onClick={() => setLayerVisibility(prev => ({
-              ...prev, hotspots: true, intelHotspots: true, shippingChokepoints: false, conflictZones: true, militaryBases: false, nuclearFacilities: false, underseaCables: false, cyberRegions: false
-            }))}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> {t('map.presetConflict')}
-          </button>
-
-          <button
-            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${layerVisibility.shippingChokepoints && layerVisibility.underseaCables ? 'bg-[rgba(245,158,11,0.15)] text-amber-500' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-            onClick={() => setLayerVisibility(prev => ({
-              ...prev, hotspots: false, intelHotspots: false, shippingChokepoints: true, conflictZones: false, militaryBases: false, nuclearFacilities: false, underseaCables: true, cyberRegions: false
-            }))}
-          >
-             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {t('map.presetTrade')}
-          </button>
-
-          <button
-            className={`py-1.5 px-3 rounded-lg text-left text-xs font-semibold transition-all duration-200 flex items-center gap-2 ${layerVisibility.militaryBases && layerVisibility.nuclearFacilities ? 'bg-[rgba(16,185,129,0.15)] text-emerald-500' : 'text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-            onClick={() => setLayerVisibility(prev => ({
-              ...prev, hotspots: false, intelHotspots: true, shippingChokepoints: false, conflictZones: true, militaryBases: true, nuclearFacilities: true, underseaCables: false, cyberRegions: false
-            }))}
-          >
-             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {t('map.presetDefense')}
-          </button>
-        </div>
-        
-        {/* Individual Toggles */}
-        <div className="flex flex-col gap-1">
-          <span className="text-[0.6rem] font-bold tracking-widest text-text-dim px-2 pt-1 pb-1 mb-1 block">LAYERS</span>
-          
-          <div className="grid grid-cols-2 gap-1">
-            <button
-              className={`py-1.5 px-2 rounded-md text-[0.6rem] font-bold tracking-wide transition-all duration-200 ${layerVisibility.intelHotspots ? 'bg-panel-item-hover text-accent shadow-[inset_0_0_0_1px_rgba(99,179,237,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-              onClick={() => toggleLayer('intelHotspots')}
-            >
-              {t('map.intel')}
-            </button>
-            <button
-              className={`py-1.5 px-2 rounded-md text-[0.6rem] font-bold tracking-wide transition-all duration-200 ${layerVisibility.hotspots ? 'bg-panel-item-hover text-accent shadow-[inset_0_0_0_1px_rgba(99,179,237,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-              onClick={() => toggleLayer('hotspots')}
-            >
-              {t('map.watch')}
-            </button>
-            {mapView === 'us' && (
-              <button
-                className={`py-1.5 px-2 rounded-md text-[0.6rem] font-bold tracking-wide transition-all duration-200 ${layerVisibility.usCities ? 'bg-panel-item-hover text-accent shadow-[inset_0_0_0_1px_rgba(99,179,237,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                onClick={() => toggleLayer('usCities')}
-              >
-                {t('map.cities')}
-              </button>
-            )}
-            {mapView === 'global' && (
-              <>
-                <button
-                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.conflictZones ? 'bg-[rgba(239,68,68,0.1)] text-red-500 shadow-[inset_0_0_0_1px_rgba(239,68,68,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                  onClick={() => toggleLayer('conflictZones')}
-                >
-                  CONFLICT
-                </button>
-                <button
-                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.shippingChokepoints ? 'bg-[rgba(245,158,11,0.1)] text-amber-500 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                  onClick={() => toggleLayer('shippingChokepoints')}
-                >
-                  SHIPPING
-                </button>
-                <button
-                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.militaryBases ? 'bg-[rgba(16,185,129,0.1)] text-emerald-500 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                  onClick={() => toggleLayer('militaryBases')}
-                >
-                  MILITARY
-                </button>
-                <button
-                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.nuclearFacilities ? 'bg-[rgba(168,85,247,0.1)] text-purple-500 shadow-[inset_0_0_0_1px_rgba(168,85,247,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                  onClick={() => toggleLayer('nuclearFacilities')}
-                >
-                  NUCLEAR
-                </button>
-                <button
-                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.underseaCables ? 'bg-[rgba(56,189,248,0.1)] text-sky-500 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                  onClick={() => toggleLayer('underseaCables')}
-                >
-                  INFRA
-                </button>
-                <button
-                  className={`py-1.5 px-1 rounded-md text-[0.55rem] font-bold tracking-wide transition-all duration-200 flex items-center justify-center text-center ${layerVisibility.cyberRegions ? 'bg-[rgba(236,72,153,0.1)] text-pink-500 shadow-[inset_0_0_0_1px_rgba(236,72,153,0.3)]' : 'bg-transparent text-text-secondary hover:bg-[rgba(255,255,255,0.05)]'}`}
-                  onClick={() => toggleLayer('cyberRegions')}
-                >
-                  CYBER
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <MapLayerControls
+        layerVisibility={layerVisibility}
+        toggleLayer={toggleLayer}
+        setLayerVisibility={setLayerVisibility}
+        mapView={mapView}
+      />
       <div className="absolute inset-0 pointer-events-none z-[5]">
         <div className="absolute text-xs font-semibold text-accent tracking-[1px] p-2 bg-[rgba(10,14,20,0.7)] border border-border-main bottom-2 left-2 rounded-tr flex gap-4">
           <span className="flex items-center gap-1 text-[0.65rem]"><span className="legend-dot w-2 h-2 rounded-full inline-block hotspot"></span>{t('map.high')}</span>
@@ -1482,7 +1240,13 @@ const GlobalMap = () => {
           </div>
         </div>
       </div>
-      <svg ref={svgRef}></svg>
+      <svg
+        ref={svgRef}
+        role="img"
+        aria-label={t('map.svgLabel')}
+        data-map-keyboard-target
+        tabIndex={0}
+      ></svg>
       <HotspotModal selectedHotspot={selectedHotspot} onClose={closePopup} newsLoading={newsLoading} />
       <div className="absolute bottom-0 w-full z-20">
         <TickerStrip mode="geo" />
