@@ -49,32 +49,7 @@ export const I18nProvider = ({ children }) => {
       return typeof translatedValue === 'string' ? interpolate(translatedValue, values) : translatedValue
     }
 
-    const formatDate = (date, options) => new Intl.DateTimeFormat(locale, options).format(date)
-    const formatTime = (date, options) => new Intl.DateTimeFormat(locale, options).format(date)
-
-    const formatRelativeTime = (date) => {
-      const target = new Date(date)
-      const elapsedSeconds = Math.round((target.getTime() - Date.now()) / 1000)
-      const divisions = [
-        ['year', 31536000],
-        ['month', 2592000],
-        ['week', 604800],
-        ['day', 86400],
-        ['hour', 3600],
-        ['minute', 60],
-      ]
-
-      for (const [unit, secondsInUnit] of divisions) {
-        if (Math.abs(elapsedSeconds) >= secondsInUnit) {
-          return new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' }).format(
-            Math.round(elapsedSeconds / secondsInUnit),
-            unit,
-          )
-        }
-      }
-
-      return t('common.now')
-    }
+    const formatDateTime = (date, options) => new Intl.DateTimeFormat(locale, options).format(date)
 
     return {
       language,
@@ -82,9 +57,8 @@ export const I18nProvider = ({ children }) => {
       languages: SUPPORTED_LANGUAGES,
       setLanguage,
       t,
-      formatDate,
-      formatTime,
-      formatRelativeTime,
+      formatDate: formatDateTime,
+      formatTime: formatDateTime,
     }
   }, [language, locale])
 

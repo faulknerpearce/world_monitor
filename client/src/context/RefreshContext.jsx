@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback } from 'react'
+import { createContext, useState, useCallback, useMemo } from 'react'
 import { clearCache } from '@utils/fetchUtils'
 
 export const RefreshContext = createContext({ refreshKey: 0, triggerRefresh: () => {} })
@@ -16,8 +16,10 @@ export const RefreshProvider = ({ children }) => {
     setRefreshKey(prev => prev + 1)
   }, [])
 
+  const value = useMemo(() => ({ refreshKey, triggerRefresh }), [refreshKey, triggerRefresh])
+
   return (
-    <RefreshContext.Provider value={{ refreshKey, triggerRefresh }}>
+    <RefreshContext.Provider value={value}>
       {children}
     </RefreshContext.Provider>
   )
