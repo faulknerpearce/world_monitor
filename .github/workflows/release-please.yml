@@ -1,0 +1,29 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # release-please parses commits since the last release tag
+          # and creates/updates a release PR with the next version.
+          release-type: node
+          package-name: world_monitor
+          # Keep client and root in the same release.
+          pull-request-title-pattern: 'chore: release v${{version}}'
+          changelog-path: CHANGELOG.md
+          # Tag with plain semver (no v prefix in the manifest) so it
+          # matches package.json#version directly.
+          tag-name: v${{version}}
