@@ -51,8 +51,8 @@ export default {
         'pulse-ring': 'pulse-ring 2s infinite',
         'pulse-opacity': 'pulse-opacity 2s infinite',
         'rotate-dash': 'rotate-dash 10s linear infinite',
-        'pulse-cyber': 'pulse-cyber 2s infinite',
         'pulse-critical': 'pulse-critical 1s ease-in-out infinite',
+        'fast-pulse': 'fast-pulse 1.2s ease-out infinite',
       },
       keyframes: {
         slideIn: {
@@ -109,18 +109,13 @@ export default {
         'rotate-dash': {
           to: { strokeDashoffset: '-20' },
         },
-        'pulse-cyber': {
-          '0%': { strokeOpacity: '1' },
-          '50%': { strokeOpacity: '0.3' },
-          '100%': { strokeOpacity: '1' },
-        },
         'pulse-critical': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' },
         },
-        fadeInUp: {
-          from: { opacity: '0', transform: 'translateY(6px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+        'fast-pulse': {
+          '0%': { transform: 'scale(1)', opacity: '0.85' },
+          '100%': { transform: 'scale(2.2)', opacity: '0' },
         },
       },
     },
