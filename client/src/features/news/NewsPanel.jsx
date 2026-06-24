@@ -1,49 +1,17 @@
-import { useEffect, useState, useContext } from 'react'
+import { memo, useCallback } from 'react'
 import { BaseFeedService } from './baseFeedService'
-import { RefreshContext } from '@context/RefreshContext'
+import { useFeedData } from '@hooks/useFeedData'
 import { useI18n } from '@context/I18nContext'
-import { getTimeAgo } from '@utils/dateHelpers'
+import { getTimeAgo } from '@utils'
 
 const NewsPanel = ({ feeds, panelId }) => {
-  const [news, setNews] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const { refreshKey } = useContext(RefreshContext)
   const { t, locale } = useI18n()
 
-  useEffect(() => {
-    let cancelled = false
-
-    const fetchNews = async () => {
-      try {
-        setLoading(true)
-        const items = await BaseFeedService.fetchFeeds(feeds, { maxItems: 50 })
-        if (!cancelled) {
-          setNews(items)
-          setError(null)
-        }
-      } catch (e) {
-        console.error('News fetch error:', e)
-        if (!cancelled) {
-          setError(t('news.failed', { message: e.message }))
-          setNews([])
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    fetchNews()
-    const interval = setInterval(fetchNews, 5 * 60 * 1000) // Refresh every 5 minutes
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
-    // `feeds` is intentionally the only stable dep; `fetchNews` is defined inline
-    // and would cause an infinite loop if included. `refreshKey` forces a new cycle
-    // when the user clicks the REFRESH button.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [feeds, refreshKey])
+  const fetchNews = useCallback(
+    () => BaseFeedService.fetchFeeds(feeds, { maxItems: 50 }),
+    [feeds]
+  )
+  const { data: news, loading, error } = useFeedData(fetchNews, 5 * 60 * 1000)
 
   // Get unique sources count
   const uniqueSources = [...new Set(news.map(item => item.source))].length
@@ -56,12 +24,14 @@ const NewsPanel = ({ feeds, panelId }) => {
     return 'theme-neutral'
   }
 
+  const errorMessage = error ? t('news.failed', { message: error.message }) : null
+
   if (loading && news.length === 0) {
     return <div className="p-4 text-center text-text-dim text-[0.8rem]">{t('news.loading')}</div>
   }
 
-  if (error && news.length === 0) {
-    return <div className="p-8 text-center text-status-red text-[0.7rem]">{error}</div>
+  if (errorMessage && news.length === 0) {
+    return <div className="p-8 text-center text-status-red text-[0.7rem]">{errorMessage}</div>
   }
 
   return (
@@ -76,16 +46,16 @@ const NewsPanel = ({ feeds, panelId }) => {
           <span className="text-[0.5rem] text-text-dim uppercase tracking-[0.1em]">{t('news.sources')}</span>
         </div>
         <div className="flex items-center ml-auto gap-1">
-          <span className="w-[5px] h-[5px] rounded-full bg-[#10b981] animate-live-pulse shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
+          <span className="w-[5px] h-[5px] rounded-full bg-emerald-500 animate-live-pulse shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
           <span className="text-[0.5rem] text-text-dim uppercase tracking-[0.1em]">{t('common.live')}</span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto flex flex-col p-4">
-        {news.map((item, idx) => (
-          <div key={idx} className="news-item flex flex-col p-3.5 mb-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-lg transition-all duration-200 cursor-pointer hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] hover:-translate-y-0.5 shadow-sm hover:shadow-md group">
+        {news.map((item, index) => (
+          <div key={item.guid || `${item.link}-${item.title}-${item.pubDateStr ?? index}`} className="news-item flex flex-col p-3.5 mb-3 bg-panel-item-bg border border-border-glass rounded-lg transition-all duration-200 cursor-pointer hover:bg-panel-item-hover hover:border-border-glass-hover hover:-translate-y-0.5 shadow-sm hover:shadow-md group">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="item-source text-[0.65rem] font-bold uppercase tracking-[0.1em] text-text-muted group-hover:text-accent transition-colors duration-200">{item.source}</span>
+              <span className="item-source text-[0.65rem] font-bold uppercase tracking-[0.1em] text-text-secondary group-hover:text-accent transition-colors duration-200">{item.source}</span>
               <span className="text-[0.65rem] text-text-dim font-[family-name:var(--font-mono)]">{getTimeAgo(item.date, locale)}</span>
             </div>
             <a href={item.link} target="_blank" rel="noopener noreferrer" className="block text-text-primary text-[0.85rem] font-medium leading-relaxed no-underline transition-colors duration-200 hover:text-accent line-clamp-3">
@@ -98,4 +68,4 @@ const NewsPanel = ({ feeds, panelId }) => {
   )
 }
 
-export default NewsPanel
+export default memo(NewsPanel)

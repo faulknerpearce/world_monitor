@@ -1,4 +1,4 @@
-import { fetchWithProxy, parseRSS } from '@utils/fetchUtils.js'
+import { fetchWithProxy, parseRSS, getCachedParsedFeed, fetchAndParseFeed } from '@utils/fetchUtils'
 
 /**
  * Base service for fetching RSS feeds
@@ -14,24 +14,29 @@ export class BaseFeedService {
    */
   static async fetchFeeds(feeds, options = {}) {
     const { maxItems = null } = options
+
+    const results = await Promise.allSettled(
+      feeds.map(async (feed) => {
+        // Try the shared parsed cache first; only hit the network on miss.
+        // Concurrent callers for the same URL share one in-flight fetch.
+        const cached = getCachedParsedFeed(feed.url)
+        const items = cached ?? await fetchAndParseFeed(feed.url)
+        // Tag the source without mutating the cached array (frozen in spirit
+        // though not via Object.freeze — copy to be safe).
+        return items.map(item => ({ ...item, source: feed.name }))
+      })
+    )
+
     const allItems = []
     let successCount = 0
-
-    for (const feed of feeds) {
-      try {
-        const xmlText = await fetchWithProxy(feed.url)
-        const items = parseRSS(xmlText)
-
-        items.forEach(item => {
-          item.source = feed.name
-        })
-
-        allItems.push(...items)
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        allItems.push(...result.value)
         successCount++
-      } catch (e) {
-        console.error(`Failed to fetch ${feed.name}:`, e.message)
+      } else {
+        console.error(`Failed to fetch ${feeds[idx].name}:`, result.reason?.message)
       }
-    }
+    })
 
     if (successCount === 0) {
       throw new Error('All feeds failed to load')
@@ -62,17 +67,5 @@ export class BaseFeedService {
     items.sort((a, b) => b.date - a.date)
 
     return maxItems ? items.slice(0, maxItems) : items
-  }
-
-  /**
-   * Filter items by keywords
-   * @param {Array} items - Items to filter
-   * @param {Array} keywords - Keywords to match
-   * @returns {Array} Filtered items
-   */
-  static filterByKeywords(items, keywords) {
-    return items.filter(item =>
-      keywords.some(k => item.title.toLowerCase().includes(k.toLowerCase()))
-    )
   }
 }
