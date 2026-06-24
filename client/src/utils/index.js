@@ -1,3 +1,4 @@
-export { getTimeAgo } from './dateHelpers.js'
-export { formatAmount, formatNumber, formatPercent, truncateText } from './helpers.js'
-export { clearCache, fetchWithProxy, getCacheStats, parseRSS } from './fetchUtils.js'
+export { getTimeAgo } from './dateHelpers'
+export { formatAmount, formatNumber } from './helpers'
+export { clearCache, fetchWithProxy, fetchBinaryWithProxy, parseRSS } from './fetchUtils'
+export { createCache, getGitHubHeaders } from './githubUtils'

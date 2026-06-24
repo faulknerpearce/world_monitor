@@ -5,17 +5,7 @@ export const formatNumber = (num) => {
   return num.toFixed(2)
 }
 
-export const formatPercent = (num) => {
-  const sign = num >= 0 ? '+' : ''
-  return `${sign}${num.toFixed(2)}%`
-}
-
 export const formatAmount = (amount) => {
   if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}B`
   return `$${amount}M`
-}
-
-export const truncateText = (text, maxLength = 100) => {
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + '...'
 }
