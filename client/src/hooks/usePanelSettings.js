@@ -1,20 +1,21 @@
-import { useLocalStorage } from './useLocalStorage.js'
+import { useCallback } from 'react'
+import { useLocalStorage } from './useLocalStorage'
 
+/**
+ * Per-panel visibility settings. `panelSettings` is a map of `panelId →
+ * boolean` where `false` hides the panel. Missing keys default to visible.
+ */
 export const usePanelSettings = () => {
-  const [panelSettings, setPanelSettings] = useLocalStorage('situationMonitorPanels', {})
+  const [panelSettings, setPanelSettings] = useLocalStorage('world_monitor_panels', {})
 
-  const togglePanel = (panelId) => {
+  const togglePanel = useCallback((panelId) => {
     setPanelSettings(prev => ({ ...prev, [panelId]: !prev[panelId] }))
-  }
+  }, [setPanelSettings])
 
-  const isPanelEnabled = (panelId) => {
-    return panelSettings[panelId] !== false
-  }
+  const isPanelEnabled = useCallback(
+    (panelId) => panelSettings[panelId] !== false,
+    [panelSettings]
+  )
 
-  return {
-    panelSettings,
-    togglePanel,
-    isPanelEnabled
-  }
+  return { panelSettings, setPanelSettings, togglePanel, isPanelEnabled }
 }
-

@@ -7,11 +7,12 @@ import { RefreshContext } from '@context/RefreshContext'
  *
  * @param {Function} fetchFn - Async function that returns an array of feed items
  * @param {number} interval - Polling interval in milliseconds
- * @returns {{ data: Array, loading: boolean }}
+ * @returns {{ data: Array, loading: boolean, error: Error|null }}
  */
 export const useFeedData = (fetchFn, interval) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const fetchFnRef = useRef(fetchFn)
   const { refreshKey } = useContext(RefreshContext)
 
@@ -25,9 +26,13 @@ export const useFeedData = (fetchFn, interval) => {
       try {
         setLoading(true)
         const items = await fetchFnRef.current()
-        if (!cancelled) setData(items)
+        if (!cancelled) {
+          setData(items)
+          setError(null)
+        }
       } catch (e) {
         console.error('Feed fetch error:', e)
+        if (!cancelled) setError(e)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -45,5 +50,5 @@ export const useFeedData = (fetchFn, interval) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interval, refreshKey])
 
-  return { data, loading }
+  return { data, loading, error }
 }

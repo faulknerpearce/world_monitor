@@ -78,6 +78,25 @@ const getRelatedAssets = (hotspot) => {
   return []
 }
 
+const TYPE_BADGE_CONFIG = {
+  hotspot: (s) => ({ className: s.severity || s.level || 'unknown', label: `map.${s.severity || s.level || 'medium'}` }),
+  country: () => ({ className: 'country', label: 'map.country' }),
+  intel: (s) => ({ className: s.severity || 'unknown', label: `map.${s.severity || 'medium'}` }),
+  chokepoint: () => ({ className: 'elevated', label: 'map.shipping' }),
+  conflict: () => ({ className: 'high', label: 'map.conflict' }),
+  base: () => ({ className: 'medium', label: 'map.militaryBase' }),
+  nuclear: () => ({ className: 'high', label: 'map.nuclear' }),
+  cyber: () => ({ className: 'elevated', label: 'map.cyber' }),
+  city: (s) => ({ className: s.severity || 'medium', label: s.severity && typeof s.severity === 'string' ? `map.${s.severity}` : 'map.location' }),
+}
+
+const getTypeBadge = (hotspot, t) => {
+  const config = TYPE_BADGE_CONFIG[hotspot.type]
+  if (!config) return { className: 'unknown', label: t('map.location') }
+  const result = config(hotspot)
+  return { className: result.className, label: t(result.label) }
+}
+
 const formatNewsDate = (dateStr, locale, t) => {
   try {
     const date = new Date(dateStr)
@@ -104,33 +123,14 @@ const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
             <span className="text-[0.85rem] font-normal text-text-secondary ml-2"> - {selectedHotspot.subtext}</span>
           )}
         </div>
-        {selectedHotspot.type === 'hotspot' ? (
-          <div className={`hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current ${selectedHotspot.severity || selectedHotspot.level || 'unknown'}`}>
-            {t(`map.${severityLabel}`)}
-          </div>
-        ) : selectedHotspot.type === 'country' ? (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current country">{t('map.country')}</div>
-        ) : selectedHotspot.type === 'intel' ? (
-          <div className={`hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current ${selectedHotspot.severity || 'unknown'}`}>
-            {t(`map.${selectedHotspot.severity || 'medium'}`)}
-          </div>
-        ) : selectedHotspot.type === 'chokepoint' ? (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current elevated">{t('map.shipping')}</div>
-        ) : selectedHotspot.type === 'conflict' ? (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current high">{t('map.conflict')}</div>
-        ) : selectedHotspot.type === 'base' ? (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current medium">{t('map.militaryBase')}</div>
-        ) : selectedHotspot.type === 'nuclear' ? (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current high">{t('map.nuclear')}</div>
-        ) : selectedHotspot.type === 'cyber' ? (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current elevated">{t('map.cyber')}</div>
-        ) : selectedHotspot.type === 'city' ? (
-          <div className={`hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current ${selectedHotspot.severity || 'medium'}`}>
-            {selectedHotspot.severity && typeof selectedHotspot.severity === 'string' ? t(`map.${selectedHotspot.severity}`) : t('map.location')}
-          </div>
-        ) : (
-          <div className="hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current unknown">{t('map.location')}</div>
-        )}
+        {(() => {
+          const { className, label } = getTypeBadge(selectedHotspot, t)
+          return (
+            <div className={`hotspot-popup-level py-1 px-3 text-xs font-bold uppercase tracking-[1px] border border-current ${className}`}>
+              {label}
+            </div>
+          )
+        })()}
       </div>
 
       {selectedHotspot.category && (
@@ -150,11 +150,11 @@ const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
         <div className="mt-4">
           <div className="text-[0.7rem] font-bold text-accent tracking-[1px] mt-6 mb-3 border-b border-[rgba(0,255,136,0.2)] pb-1">{t('map.assetsAtRisk')}</div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3 mb-4">
-            {relatedAssets.map((asset, i) => (
-              <div key={i} className="bg-[rgba(255,255,255,0.03)] border border-border-main p-3 rounded text-center transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] hover:border-accent hover:-translate-y-0.5">
+            {relatedAssets.map((asset) => (
+              <div key={asset.ticker ?? asset.name} className="bg-[rgba(255,255,255,0.03)] border border-border-main p-3 rounded text-center transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] hover:border-accent hover:-translate-y-0.5">
                 <div className="text-[0.9rem] font-bold text-text-primary mb-0.5">{asset.ticker}</div>
                 <div className="text-[0.7rem] text-text-secondary mb-1.5 whitespace-nowrap overflow-hidden text-ellipsis">{asset.name}</div>
-                <div className={`text-[0.8rem] font-semibold font-[family-name:var(--font-mono)] ${asset.change.startsWith('+') ? 'text-[#00ff88]' : 'text-[#ff3333]'}`}>
+                <div className={`text-[0.8rem] font-semibold font-[family-name:var(--font-mono)] ${asset.change.startsWith('+') ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
                   {asset.change}
                 </div>
               </div>
@@ -183,8 +183,8 @@ const HotspotModal = ({ selectedHotspot, onClose, newsLoading }) => {
       ) : selectedHotspot.news && selectedHotspot.news.length > 0 ? (
         <div className="mt-4 pt-4 border-t border-border-main">
           <div className="text-xs font-bold text-accent mb-2 uppercase tracking-[1px]">{t('map.liveIntel')} ({selectedHotspot.news.length})</div>
-          {selectedHotspot.news.map((item, i) => (
-            <div key={i} className="py-2 border-b border-[rgba(255,255,255,0.1)] last:border-b-0">
+          {selectedHotspot.news.map((item) => (
+            <div key={item.link} className="py-2 border-b border-[rgba(255,255,255,0.1)] last:border-b-0">
               <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-text-primary no-underline text-[0.85rem] block mb-1 transition-colors duration-200 leading-[1.4] hover:text-accent">
                 {item.title}
               </a>

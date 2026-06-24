@@ -1,5 +1,5 @@
-import { BaseFeedService } from './baseFeedService.js'
-import { FEED_CONFIG } from './feedConfig.js'
+import { BaseFeedService } from './baseFeedService'
+import { FEED_CONFIG } from './feedConfig'
 
 /**
  * Factory to create a feed fetcher for a given feed config key.

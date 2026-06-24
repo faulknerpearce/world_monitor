@@ -2,9 +2,9 @@ import GlobalMap from './GlobalMap'
 
 const Map = () => {
   return (
-    <div className="w-full flex-1 min-h-0 flex">
+    <main id="main-content" tabIndex={-1} className="w-full flex-1 min-h-0 flex">
       <GlobalMap />
-    </div>
+    </main>
   )
 }
 

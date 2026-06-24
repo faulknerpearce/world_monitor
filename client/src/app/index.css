@@ -6,8 +6,8 @@
     :root {
         /* Core colors */
         --bg-dark: #030508;
-        --bg-panel: rgba(8, 12, 18, 0.75);
-        --bg-panel-hover: rgba(15, 22, 32, 0.85);
+        --bg-panel: #080c12;
+        --bg-panel-hover: #0f1620;
         --border-color: rgba(0, 229, 255, 0.12);
 
         /* Text */
@@ -36,23 +36,25 @@
         --orange-dim: rgba(255, 107, 53, 0.15);
         --purple: #a855f7;
         --purple-dim: rgba(168, 85, 247, 0.15);
+        --emerald: #10b981;
+        --indigo: #818cf8;
 
-        /* Glassmorphism & Depth */
-        --glass-bg: rgba(22, 27, 34, 0.6);
-        --glass-border: rgba(48, 54, 61, 0.6);
-        --glass-blur: 12px;
-        --panel-border: 1px solid rgba(48, 54, 61, 0.5);
-        --panel-border-top: 1px solid rgba(48, 54, 61, 0.8);
+        /* Panel surfaces (solid — no glass blur) */
+        --glass-bg: #161b22;
+        --glass-border: #1e2836;
+        --glass-blur: 0px;
+        --panel-border: 1px solid #1e2836;
+        --panel-border-top: 1px solid #2a3544;
         --panel-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 
         /* Extended theme-aware variables */
-        --nav-bg: rgba(13, 17, 23, 0.98);
-        --panel-header-bg: rgba(13, 17, 23, 0.5);
-        --glass-border-hover: rgba(99, 110, 123, 0.8);
-        --panel-item-bg: rgba(255, 255, 255, 0.03);
-        --panel-item-hover: rgba(255, 255, 255, 0.06);
+        --nav-bg: #0a0e14;
+        --panel-header-bg: #0a0e14;
+        --glass-border-hover: #2a3544;
+        --panel-item-bg: #111820;
+        --panel-item-hover: #151d28;
         --overlay-bg: rgba(0, 0, 0, 0.8);
-        --ticker-bg: rgba(13, 17, 23, 0.9);
+        --ticker-bg: #0a0e14;
         --ticker-fade: rgba(13, 17, 23, 1);
         --scrollbar-thumb: rgba(255, 255, 255, 0.15);
         --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
@@ -77,43 +79,9 @@
         overflow-x: hidden;
     }
 
-    /* Cinematic Background Glow */
-    body::before {
-        content: '';
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at center, rgba(30, 58, 138, 0.08), transparent 40%),
-            radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.05), transparent 30%);
-        pointer-events: none;
-        z-index: -1;
-    }
-
-    /* CRT Scan-line Overlay */
-    body::after {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(0, 0, 0, 0.03) 2px,
-            rgba(0, 0, 0, 0.03) 4px
-        );
-        opacity: 0.3;
-        pointer-events: none;
-        z-index: 99;
-    }
-
     ::selection {
-        background: rgba(99, 102, 241, 0.4);
-        color: #ffffff;
+        background: var(--accent);
+        color: var(--bg-dark);
     }
 
     #root {
@@ -147,6 +115,11 @@
 }
 
 @layer components {
+    /* ===== Shared feed item card (used by Layoffs, Startups, VC, AI Race, War Watch) ===== */
+    .panel-feed-item {
+        @apply flex flex-col p-3.5 mb-3 bg-panel-item-bg border border-border-glass rounded-lg no-underline transition-all duration-200 hover:bg-panel-item-hover hover:border-border-glass-hover hover:-translate-y-0.5 shadow-sm hover:shadow-md;
+    }
+
     /* ===== Ticker pause control ===== */
     .paused .ticker-track { animation-play-state: paused; }
 
@@ -266,6 +239,14 @@
         animation: pulse-ring 2s infinite;
     }
 
+    /* Faster pulse for GDELT emerging markers — visual cue that this
+       is a recent event, not a curated static hotspot. */
+    .hotspot-fast-pulse {
+        transform-origin: center;
+        transform-box: fill-box;
+        animation: fast-pulse 1.2s ease-out infinite;
+    }
+
     .chokepoints rect {
         animation: pulse-opacity 2s infinite;
     }
@@ -277,27 +258,27 @@
 
     .cables path {
         fill: none;
-        stroke: #0088cc;
+        stroke: var(--accent);
         stroke-width: 1.5;
         stroke-dasharray: 4, 4;
         opacity: 0.6;
     }
 
     .cables path.major {
-        stroke: #00ccff;
+        stroke: var(--accent);
         stroke-width: 2;
         opacity: 0.8;
     }
 
     .cyber-regions circle {
-        fill: #00ff00;
+        fill: var(--green);
         stroke: #000;
         stroke-width: 1;
     }
 
     .cyber-regions rect {
         fill: none;
-        stroke: #00ff00;
+        stroke: var(--green);
         stroke-width: 1;
         stroke-dasharray: 2, 2;
         animation: pulse-cyber 2s infinite;
@@ -313,7 +294,7 @@
         fill: rgba(10, 14, 20, 0.98);
         stroke: var(--accent);
         stroke-width: 1;
-        filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3));
+        filter: drop-shadow(0 0 10px var(--green-dim));
     }
 
     .marker-tooltip .tooltip-header {
@@ -332,12 +313,12 @@
         font-family: var(--font-main);
         font-size: 10px;
         font-weight: 500;
-        fill: #e2e8f0;
+        fill: var(--text-primary);
         line-height: 1.4;
     }
 
     .marker-tooltip .tooltip-text tspan {
-        fill: #e2e8f0;
+        fill: var(--text-primary);
     }
 
     .marker-tooltip .tooltip-show-more-bg {
@@ -345,8 +326,8 @@
     }
 
     .marker-tooltip .tooltip-show-more-bg:hover {
-        fill: rgba(0, 255, 136, 0.3);
-        stroke: #00ff88;
+        fill: var(--green-dim);
+        stroke: var(--green);
         stroke-width: 1.5;
     }
 
@@ -372,27 +353,27 @@
     }
 
     /* ===== News theme colors ===== */
-    .theme-blue .news-summary { background: rgba(59, 130, 246, 0.08); }
+    .theme-blue .news-summary { background: #0f1a2e; }
     .theme-blue .stat-value { color: #60a5fa; }
     .theme-blue .item-source { color: #60a5fa; }
 
-    .theme-cyan .news-summary { background: rgba(6, 182, 212, 0.08); }
+    .theme-cyan .news-summary { background: #0a1a1f; }
     .theme-cyan .stat-value { color: #22d3ee; }
     .theme-cyan .item-source { color: #22d3ee; }
 
-    .theme-green .news-summary { background: rgba(16, 185, 129, 0.08); }
-    .theme-green .stat-value { color: #10b981; }
-    .theme-green .item-source { color: #10b981; }
+    .theme-green .news-summary { background: #0a1a14; }
+    .theme-green .stat-value { color: var(--emerald); }
+    .theme-green .item-source { color: var(--emerald); }
 
-    .theme-purple .news-summary { background: rgba(139, 92, 246, 0.08); }
+    .theme-purple .news-summary { background: #15101f; }
     .theme-purple .stat-value { color: #a78bfa; }
     .theme-purple .item-source { color: #a78bfa; }
 
-    .theme-red .news-summary { background: rgba(239, 68, 68, 0.08); }
+    .theme-red .news-summary { background: #1a0f0f; }
     .theme-red .stat-value { color: #f87171; }
     .theme-red .item-source { color: #f87171; }
 
-    .theme-neutral .news-summary { background: rgba(255, 255, 255, 0.03); }
+    .theme-neutral .news-summary { background: var(--panel-header-bg); }
 
     /* ===== AI player chip color dot ===== */
     .ai-player-chip::before {
@@ -405,7 +386,7 @@
     }
 
     /* ===== Ticker type accents ===== */
-    .ticker-item.index .ticker-name { color: #818cf8; }
+    .ticker-item.index .ticker-name { color: var(--indigo); }
     .ticker-item.crypto .ticker-name { color: #fbbf24; }
     .ticker-item.sector .ticker-name { color: #a78bfa; }
     .ticker-item.commodity .ticker-name { color: #34d399; }
@@ -422,33 +403,33 @@
 
     /* ===== Conflict zone intensity indicators ===== */
     .intensity-high .zone-indicator {
-        background: #ef4444;
+        background: var(--red);
         box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
         animation: pulse 1s infinite;
     }
 
     .intensity-medium .zone-indicator {
-        background: #f59e0b;
+        background: var(--yellow);
     }
 
     .intensity-low .zone-indicator {
-        background: #6b7280;
+        background: var(--text-dim);
     }
 
     /* ===== Hotspot severity levels ===== */
-    .hotspot-popup-level.high { background: #ef4444; color: #fff; }
-    .hotspot-popup-level.elevated { background: #f59e0b; color: #000; }
-    .hotspot-popup-level.medium { background: #22c55e; color: #000; }
-    .hotspot-popup-level.intel { background: #00ddff; color: #000; }
-    .hotspot-popup-level.country { background: #888; color: #fff; }
+    .hotspot-popup-level.high { background: var(--red); color: #fff; }
+    .hotspot-popup-level.elevated { background: var(--yellow); color: #000; }
+    .hotspot-popup-level.medium { background: var(--green); color: #000; }
+    .hotspot-popup-level.intel { background: var(--accent); color: #000; }
+    .hotspot-popup-level.country { background: var(--text-dim); color: #fff; }
 
     /* ===== Map legend dots ===== */
-    .legend-dot.high { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-    .legend-dot.elevated { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-    .legend-dot.medium { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-    .legend-dot.hotspot { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-    .legend-dot.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-    .legend-dot.inactive { background: #888888; box-shadow: 0 0 8px #888888; }
+    .legend-dot.high { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    .legend-dot.elevated { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+    .legend-dot.medium { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .legend-dot.hotspot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    .legend-dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .legend-dot.inactive { background: var(--text-dim); box-shadow: 0 0 8px var(--text-dim); }
 
     /* ===== Map stat alert colors ===== */
     .stat-value.critical { color: var(--red); animation: pulse-critical 1s ease-in-out infinite; }
@@ -510,15 +491,6 @@
 
     .text-\[0\.7rem\] {
         font-size: clamp(0.75rem, 2.5vw, 0.8rem) !important;
-    }
-
-    /* Panel heights - unified on mobile */
-    .hero-featured .panel,
-    .news-grid .panel[data-panel="startups"],
-    .news-grid .panel[data-panel="vc"],
-    .news-grid .panel[data-panel="layoffs"],
-    .news-grid .panel {
-        height: 320px !important;
     }
 
     /* Grid gap adjustments - smaller on mobile */
@@ -615,8 +587,6 @@
     .animate-live-pulse,
     .animate-pulse-slow,
     .animate-pulse,
-    .animate-pulse-cyber,
-    .animate-pulse-critical,
     .animate-ticker-scroll,
     .animate-ticker-scroll-reverse,
     .animate-spin,

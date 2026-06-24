@@ -1,15 +1,7 @@
-const GITHUB_API = 'https://api.github.com'
+import { getGitHubHeaders, createCache } from '@utils/githubUtils'
+import { API } from '@config/api'
 
-const getHeaders = () => {
-  const token = import.meta.env.VITE_GITHUB_TOKEN
-  return token
-    ? { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' }
-    : { Accept: 'application/vnd.github+json' }
-}
-
-// In-memory cache per repo URL
-const cache = new Map()
-const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+const cache = createCache(30 * 60 * 1000)
 
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -18,14 +10,12 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
  * Returns array of 52 week objects: { week, total, days: [sun..sat] }
  */
 const fetchRepoActivity = async (repo, retries = 4, delay = 2500) => {
-  const url = `${GITHUB_API}/repos/${repo}/stats/commit_activity`
-  const cached = cache.get(url)
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data
-  }
+  const url = `${API.github}/repos/${repo}/stats/commit_activity`
+
+  if (cache.has(url)) return cache.get(url)
 
   for (let i = 0; i < retries; i++) {
-    const res = await fetch(url, { headers: getHeaders() })
+    const res = await fetch(url, { headers: getGitHubHeaders() })
 
     if (res.status === 202) {
       // GitHub is computing stats asynchronously — wait and retry
@@ -41,8 +31,7 @@ const fetchRepoActivity = async (repo, retries = 4, delay = 2500) => {
     if (!res.ok) throw new Error(`GitHub API ${res.status} for ${repo}`)
 
     const data = await res.json()
-    cache.set(url, { data, timestamp: Date.now() })
-    console.log(`Fetched commit activity for ${repo}, ${JSON.stringify(data)}`)
+    cache.set(url, data)
     return data
   }
 

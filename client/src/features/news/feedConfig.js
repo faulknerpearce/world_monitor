@@ -1,4 +1,25 @@
-// Centralized feed configuration for all panels
+// Centralized feed configuration for all panels.
+//
+// Feeds that appear in more than one panel are defined once as a canonical
+// array and referenced by spread elsewhere, so a URL change propagates to
+// every consumer and dedup logic in the feed cache (useDynamicRegions,
+// MapFeedService) sees the same object identity.
+
+// Defense-oriented sources used by both `news.intel` and `warWatch`.
+const DEFENSE_FEEDS = [
+  { name: 'Defense One', url: 'https://www.defenseone.com/rss/all/' },
+  { name: 'War on Rocks', url: 'https://warontherocks.com/feed/' },
+  { name: 'Breaking Defense', url: 'https://breakingdefense.com/feed/' },
+  { name: 'The War Zone', url: 'https://www.thedrive.com/the-war-zone/feed' },
+]
+
+// Startup coverage shared by `startups` and `vc`.
+const STARTUP_FEEDS = [
+  { name: 'TechCrunch', url: 'https://techcrunch.com/category/startups/feed/' },
+  { name: 'VentureBeat', url: 'https://venturebeat.com/category/deals/feed/' },
+  { name: 'Crunchbase', url: 'https://news.crunchbase.com/feed/' },
+  { name: 'Sifted', url: 'https://sifted.eu/feed' },
+]
 
 export const FEED_CONFIG = {
   news: {
@@ -30,10 +51,7 @@ export const FEED_CONFIG = {
     ],
     intel: [
       { name: 'Brookings', url: 'https://www.brookings.edu/feed/', type: 'think-tank', topics: ['policy', 'geopolitics'] },
-      { name: 'Defense One', url: 'https://www.defenseone.com/rss/all/', type: 'defense', topics: ['military', 'defense'] },
-      { name: 'War on Rocks', url: 'https://warontherocks.com/feed/', type: 'defense', topics: ['military', 'strategy'] },
-      { name: 'Breaking Defense', url: 'https://breakingdefense.com/feed/', type: 'defense', topics: ['military', 'defense'] },
-      { name: 'The Drive War Zone', url: 'https://www.thedrive.com/the-war-zone/feed', type: 'defense', topics: ['military'] },
+      ...DEFENSE_FEEDS.map(f => ({ ...f, type: 'defense', topics: ['military', 'defense'] })),
       { name: 'The Diplomat', url: 'https://thediplomat.com/feed/', type: 'regional', topics: ['asia-pacific'], region: 'APAC' },
       { name: 'Al-Monitor', url: 'https://www.al-monitor.com/rss', type: 'regional', topics: ['middle-east'], region: 'MENA' },
       { name: 'Bellingcat', url: 'https://www.bellingcat.com/feed/', type: 'osint', topics: ['investigation', 'osint'] },
@@ -42,11 +60,6 @@ export const FEED_CONFIG = {
       { name: 'Politico', url: 'https://www.politico.com/rss/politics-news.xml', type: 'politics', topics: ['us-politics', 'dc'] },
       { name: 'Axios', url: 'https://api.axios.com/feed/', type: 'politics', topics: ['us-politics', 'breaking-news'] },
       { name: 'The Hill', url: 'https://thehill.com/rss/syndicator/19110', type: 'politics', topics: ['congress', 'dc'] }
-    ],
-    ai: [
-      { name: 'OpenAI', url: 'https://openai.com/blog/rss.xml' },
-      { name: 'DeepMind', url: 'https://deepmind.google/blog/rss.xml' },
-      { name: 'Hugging Face', url: 'https://huggingface.co/blog/feed.xml' }
     ]
   },
 
@@ -62,37 +75,21 @@ export const FEED_CONFIG = {
     { name: 'The Verge AI', url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml' }
   ],
 
-  goodNews: [
-    { name: 'Good News Network', url: 'https://www.goodnewsnetwork.org/feed/' },
-    { name: 'Positive News', url: 'https://www.positive.news/feed/' },
-    { name: 'Reasons to be Cheerful', url: 'https://reasonstobecheerful.world/feed/' }
-  ],
-
   layoffs: {
     rss: 'https://news.google.com/rss/search?q=tech+layoffs+jobs&hl=en-US&gl=US&ceid=US:en'
   },
 
-  startups: [
-    { name: 'TechCrunch', url: 'https://techcrunch.com/category/startups/feed/' },
-    { name: 'VentureBeat', url: 'https://venturebeat.com/category/deals/feed/' },
-    { name: 'Crunchbase', url: 'https://news.crunchbase.com/feed/' },
-    { name: 'Sifted', url: 'https://sifted.eu/feed' }
-  ],
+  startups: STARTUP_FEEDS,
 
   vc: [
     { name: 'TechCrunch VC', url: 'https://techcrunch.com/category/venture/feed/' },
     { name: 'StrictlyVC', url: 'https://www.strictlyvc.com/feed/' },
-    { name: 'VentureBeat', url: 'https://venturebeat.com/category/deals/feed/' },
-    { name: 'Crunchbase', url: 'https://news.crunchbase.com/feed/' },
-    { name: 'Sifted', url: 'https://sifted.eu/feed' },
+    ...STARTUP_FEEDS.filter(f => f.name !== 'TechCrunch'),
     { name: 'Forbes VC', url: 'https://www.forbes.com/venture-capital/feed/' }
   ],
 
   warWatch: [
-    { name: 'Defense One', url: 'https://www.defenseone.com/rss/all/' },
-    { name: 'War on Rocks', url: 'https://warontherocks.com/feed/' },
-    { name: 'Breaking Defense', url: 'https://breakingdefense.com/feed/' },
-    { name: 'The War Zone', url: 'https://www.thedrive.com/the-war-zone/feed' },
+    ...DEFENSE_FEEDS,
     { name: 'Janes', url: 'https://www.janes.com/feeds/news' }
   ]
 }

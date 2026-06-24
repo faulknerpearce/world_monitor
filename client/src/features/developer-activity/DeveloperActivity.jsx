@@ -199,9 +199,9 @@ const ChainCard = ({ chainKey, stats, t, locale }) => {
     return (
         <div className="bg-bg-panel border border-border-main rounded-lg p-5 flex flex-col gap-4">
             <div className="mb-2">
-                <div className="text-[0.85rem] font-bold uppercase tracking-[0.05em]" style={{ color: displayConfig.color }}>
+                <h3 className="text-[0.85rem] font-bold uppercase tracking-[0.05em]" style={{ color: displayConfig.color }}>
                     {displayConfig.name}
-                </div>
+                </h3>
             </div>
 
             {/* Metrics row */}
@@ -227,9 +227,9 @@ const ChainCard = ({ chainKey, stats, t, locale }) => {
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-                {config.repos.map((repo, idx) => (
+                {config.repos.map((repo) => (
                     <a
-                        key={idx}
+                        key={repo}
                         className="text-[0.55rem] text-text-dim bg-panel-item-bg py-[0.15rem] px-1.5 rounded-[3px] font-[family-name:var(--font-mono)] no-underline transition-colors duration-150 hover:text-text-primary"
                         href={`https://github.com/${repo}`}
                         target="_blank"
@@ -279,16 +279,16 @@ const ChainActivity = () => {
     }, [])
 
     return (
-        <div className="mt-8 pt-6 border-t border-border-main">
-            <div className="mb-4">
-                <span className="text-[0.65rem] font-bold text-text-dim uppercase tracking-[0.05em]">{t('developer.title')}</span>
-            </div>
+        <section className="mt-8 pt-6 border-t border-border-main" aria-labelledby="developer-activity-heading">
+            <h2 id="developer-activity-heading" className="text-[0.65rem] font-bold text-text-dim uppercase tracking-[0.05em] mb-4">
+                {t('developer.title')}
+            </h2>
             <div className="grid grid-cols-3 gap-6 max-[1400px]:grid-cols-2 max-[1000px]:grid-cols-1 max-[1000px]:gap-4">
                 {Object.keys(CHAIN_CONFIG).map(key => (
                     <ChainCard key={key} chainKey={key} stats={stats} t={t} locale={locale} />
                 ))}
             </div>
-        </div>
+        </section>
     )
 }
 

@@ -1,19 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { COMMAND_MODES } from '@config/panels'
 import { useI18n } from '@context/I18nContext'
+import { useFocusTrap } from '@hooks/useFocusTrap'
 
 const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
-  const closeButtonRef = useRef(null)
+  const dialogRef = useRef(null)
   const { t } = useI18n()
 
-  useEffect(() => {
-    if (isOpen && closeButtonRef.current) {
-      closeButtonRef.current.focus()
-    }
+  useFocusTrap(dialogRef, isOpen, onClose)
 
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') onClose()
-      // Keyboard shortcuts for modes - toggle on/off
+  // Number-key shortcuts (1-4) for mode toggling. The focus trap above
+  // handles Tab/Escape, so this listener only handles the digit keys.
+  useEffect(() => {
+    if (!isOpen) return
+    const handleDigits = (e) => {
       const shortcuts = { '1': 'founder', '2': 'markets', '3': 'intel', '4': 'signal' }
       if (shortcuts[e.key]) {
         const mode = shortcuts[e.key]
@@ -21,12 +21,9 @@ const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
         onClose()
       }
     }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, onClose, onModeChange])
+    document.addEventListener('keydown', handleDigits)
+    return () => document.removeEventListener('keydown', handleDigits)
+  }, [isOpen, onClose, onModeChange, currentMode])
 
   if (!isOpen) return null
 
@@ -37,17 +34,21 @@ const CommandModal = ({ isOpen, onClose, currentMode, onModeChange }) => {
   }
 
   return (
-    <div 
-      className="fixed inset-0 bg-overlay-bg backdrop-blur-[8px] flex items-center justify-center z-[1000] animate-fade-in" 
+    <div
+      className="fixed inset-0 bg-overlay-bg backdrop-blur-[8px] flex items-center justify-center z-[1000] animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="command-modal-title"
     >
-      <div className="bg-bg-panel border border-border-main rounded-xl p-10 max-w-[700px] w-[90%] relative animate-scale-in max-[600px]:p-6" onClick={(e) => e.stopPropagation()}>
-        <button 
-          ref={closeButtonRef}
-          className="absolute top-4 right-4 bg-transparent border-none text-text-dim text-xl cursor-pointer p-2 transition-colors duration-200 hover:text-text-primary" 
+      <div
+        ref={dialogRef}
+        className="bg-bg-panel border border-border-main rounded-xl p-10 max-w-[700px] w-[90%] relative animate-scale-in max-[600px]:p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          data-autofocus
+          className="absolute top-4 right-4 bg-transparent border-none text-text-dim text-xl cursor-pointer p-2 transition-colors duration-200 hover:text-text-primary"
           onClick={onClose}
           aria-label={t('command.close')}
         >
