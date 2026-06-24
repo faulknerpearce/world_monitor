@@ -1,5 +1,5 @@
-import { BaseFeedService } from '../news/baseFeedService.js'
-import { FEED_CONFIG } from '../news/feedConfig.js'
+import { BaseFeedService } from '@features/news/baseFeedService'
+import { FEED_CONFIG } from '@features/news/feedConfig'
 
 /**
  * Service for fetching startup funding news

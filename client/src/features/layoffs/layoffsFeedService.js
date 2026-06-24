@@ -1,14 +1,13 @@
-import { BaseFeedService } from '../news/baseFeedService.js'
-import { FEED_CONFIG } from '../news/feedConfig.js'
+import { BaseFeedService } from '@features/news/baseFeedService'
+import { FEED_CONFIG } from '@features/news/feedConfig'
 
 /**
- * Service for fetching layoffs news
+ * Fetch the latest layoffs news from Google News RSS.
+ * @param {number} maxItems
+ * @returns {Promise<Array>}
  */
-export class LayoffsFeedService extends BaseFeedService {
-  static async fetchLayoffsNews(maxItems = 10) {
-    return await this.fetchSingleFeed(
-      { name: 'Google News', url: FEED_CONFIG.layoffs.rss },
-      maxItems
-    )
-  }
-}
+export const fetchLayoffsNews = (maxItems = 10) =>
+  BaseFeedService.fetchSingleFeed(
+    { name: 'Google News', url: FEED_CONFIG.layoffs.rss },
+    maxItems
+  )

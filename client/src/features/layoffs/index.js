@@ -1,2 +1,2 @@
 export { default as LayoffsPanel } from './LayoffsPanel'
-export { LayoffsFeedService } from './layoffsFeedService'
+export { fetchLayoffsNews } from './layoffsFeedService'
