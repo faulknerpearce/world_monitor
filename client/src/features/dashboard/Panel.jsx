@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { useI18n } from '@context/I18nContext'
 
 const Panel = ({ 
@@ -25,7 +25,7 @@ const Panel = ({
 
   return (
     <article
-      className={`panel bg-bg-panel backdrop-blur-[12px] border border-border-glass rounded-lg overflow-hidden flex flex-col opacity-0 translate-y-3 animate-panel-enter transition-[border-color,box-shadow,transform] duration-300 hover:border-accent hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(var(--accent-rgb),0.15)] hover:-translate-y-0.5 md:max-[768px]:rounded-md ${isWide ? 'col-span-2 md:max-[768px]:col-span-1' : ''} ${collapsed ? 'collapsed' : ''}`}
+      className={`panel bg-bg-panel border border-border-glass rounded-lg overflow-hidden flex flex-col opacity-0 translate-y-3 animate-panel-enter transition-[border-color,box-shadow,transform] duration-300 hover:border-accent hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(var(--accent-rgb),0.15)] hover:-translate-y-0.5 md:max-[768px]:rounded-md ${isWide ? 'col-span-2 md:max-[768px]:col-span-1' : ''} ${collapsed ? 'collapsed' : ''}`}
       data-panel={id}
       draggable={draggable}
       onDragStart={onDragStart}
@@ -56,7 +56,7 @@ const Panel = ({
           <span className="text-text-dim text-[0.55rem] transition-transform duration-200" aria-hidden="true">
             {collapsed ? '▶' : '▼'}
           </span>
-          <h3 className="text-[0.75rem] font-semibold tracking-[0.1em] uppercase text-text-primary font-[family-name:var(--font-display)]" id={`panel-title-${id}`}>{title}</h3>
+          <h2 className="text-[0.75rem] font-semibold tracking-[0.1em] uppercase text-text-primary font-[family-name:var(--font-display)]" id={`panel-title-${id}`}>{title}</h2>
           {count !== undefined && (
             <span className="text-text-dim text-[0.6rem] font-normal" aria-label={t('panel.items', { count })}>
               ({count})
@@ -78,4 +78,6 @@ const Panel = ({
   )
 }
 
-export default Panel
+const MemoPanel = memo(Panel)
+MemoPanel.displayName = 'Panel'
+export default MemoPanel
