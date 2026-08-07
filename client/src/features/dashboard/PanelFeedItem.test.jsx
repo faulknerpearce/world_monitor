@@ -26,21 +26,33 @@ describe('PanelFeedItem', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('applies the green accent by default', () => {
+  it('applies the green accent to the source and theme text to the headline', () => {
     wrap(<PanelFeedItem item={baseItem} locale="en-US" />)
     const source = screen.getByText('Example')
-    expect(source.className).toMatch(/text-\[var\(--green\)\]/)
+    const headline = screen.getByText('A headline')
+    expect(source.className).toMatch(/text-green-400/)
+    expect(source.className).toMatch(/feed-source/)
+    expect(headline.className).toMatch(/feed-headline/)
+    expect(headline.className).toMatch(/text-text-primary/)
   })
 
   it('applies the requested accent', () => {
     wrap(<PanelFeedItem item={baseItem} locale="en-US" accent="purple" />)
     const source = screen.getByText('Example')
-    expect(source.className).toMatch(/text-\[var\(--purple\)\]/)
+    expect(source.className).toMatch(/text-purple-400/)
+  })
+
+  it('renders a description snippet under the headline when available', () => {
+    wrap(<PanelFeedItem
+      item={{ ...baseItem, description: '<p>Summary of the article body.</p>' }}
+      locale="en-US"
+    />)
+    expect(screen.getByText('Summary of the article body.')).toBeInTheDocument()
   })
 
   it('falls back to green for an unknown accent', () => {
     wrap(<PanelFeedItem item={baseItem} locale="en-US" accent="nonexistent" />)
     const source = screen.getByText('Example')
-    expect(source.className).toMatch(/text-\[var\(--green\)\]/)
+    expect(source.className).toMatch(/text-green-400/)
   })
 })

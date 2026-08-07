@@ -13,7 +13,12 @@ export const API: Record<string, string> = {
 
   // Chain validator / node APIs
   beaconEpochLatest: 'https://beaconcha.in/api/v1/epoch/latest',
-  koiosPoolList: 'https://api.koios.rest/api/v1/pool_list',
+  // Dev/preview: Vite proxies `/api/koios` → api.koios.rest (avoids browser CORS).
+  koiosPoolList: '/api/koios/api/v1/pool_list',
+  /** PostgREST filter for live stake pools (Koios uses `registered`, not `active`). */
+  koiosRegisteredPools: '/api/koios/api/v1/pool_list?pool_status=eq.registered',
+  /** Direct Koios URL used when the same-origin proxy is unavailable (static hosting). */
+  koiosRegisteredPoolsDirect: 'https://api.koios.rest/api/v1/pool_list?pool_status=eq.registered',
   avaxPChain: 'https://api.avax.network/ext/P',
 
   // Topojson map data

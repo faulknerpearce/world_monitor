@@ -8,6 +8,32 @@ const parsePort = (value, fallback) => {
   return Number.isInteger(port) && port > 0 ? port : fallback
 }
 
+const KOIOS_TARGET = 'https://api.koios.rest'
+
+/** Same-origin proxy for Koios (dev server.proxy + preview middleware). */
+const koiosProxyPlugin = () => ({
+  name: 'koios-proxy',
+  configurePreviewServer(server) {
+    server.middlewares.use('/api/koios', async (req, res) => {
+      const targetUrl = `${KOIOS_TARGET}${req.url.replace(/^\/api\/koios/, '')}`
+      try {
+        const headers = { Accept: 'application/json' }
+        if (req.headers.prefer) headers.Prefer = req.headers.prefer
+
+        const response = await fetch(targetUrl, { headers })
+        res.statusCode = response.status
+        for (const [key, value] of response.headers.entries()) {
+          if (key !== 'content-encoding') res.setHeader(key, value)
+        }
+        res.end(Buffer.from(await response.arrayBuffer()))
+      } catch (error) {
+        res.statusCode = 502
+        res.end(error instanceof Error ? error.message : 'Koios proxy failed')
+      }
+    })
+  },
+})
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const defaultPort = parsePort(env.PORT, 3000)
@@ -17,6 +43,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      koiosProxyPlugin(),
       // Emit a `dist/stats.html` treemap of every chunk when ANALYZE=1.
       // Open it after `npm run build` to see what's bloating the bundles.
       visualizer({
@@ -55,7 +82,12 @@ export default defineConfig(({ mode }) => {
           target: 'http://data.gdeltproject.org',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/gdelt/, ''),
-        }
+        },
+        '/api/koios': {
+          target: KOIOS_TARGET,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/koios/, ''),
+        },
       }
     },
     preview: {

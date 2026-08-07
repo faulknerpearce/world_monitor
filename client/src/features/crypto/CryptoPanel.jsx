@@ -41,7 +41,7 @@ const CryptoPanel = () => {
                 {news.map((item) => (
                     <div key={item.link} className="py-2.5 px-4 border-b border-[rgba(255,255,255,0.04)] transition-all duration-200 hover:bg-[rgba(255,255,255,0.03)] last:border-b-0">
                         <div className="text-[0.7rem] text-[#f59e0b] font-semibold uppercase tracking-[0.08em] mb-0.5">{item.source}</div>
-                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="block text-[0.85rem] text-text-primary no-underline leading-[1.4] transition-colors duration-200 hover:text-[#f59e0b]">
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="feed-headline block text-[0.85rem] text-text-primary hover:text-text-primary no-underline leading-[1.4]">
                             {item.title}
                         </a>
                         <div className="text-[0.7rem] text-text-dim mt-1 font-[family-name:var(--font-mono)]">{getTimeAgo(item.date, locale)}</div>

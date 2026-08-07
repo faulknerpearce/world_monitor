@@ -101,6 +101,17 @@ const shared = {
     tech: 'Tech',
     data: 'Data',
   },
+  dashboard: {
+    filteringBy: 'Showing {category} panels',
+    overview: {
+      marketsUp: 'Markets up',
+      marketsDown: 'Markets down',
+      topGainer: 'Top gainer',
+      topLoser: 'Top loser',
+      panelsActive: 'Active panels',
+      viewMap: 'Global map',
+    },
+  },
   errorBoundary: {
     title: 'Something went wrong',
     message: 'An unexpected error occurred',
@@ -225,6 +236,7 @@ const shared = {
   ticker: {
     loading: 'Loading {target} data...',
     market: 'market',
+    commodities: 'Commodities',
     geoAlpha: 'Geo-Alpha',
     geoAlphaLabel: 'GEO-ALPHA',
   },

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatNumber, formatAmount } from './helpers'
+import { formatNumber, formatAmount, stripHtml, getArticleSnippet } from './helpers'
 
 describe('formatNumber', () => {
   it('formats sub-thousand numbers with 2 decimals', () => {
@@ -21,6 +21,46 @@ describe('formatNumber', () => {
   it('formats billions with B suffix', () => {
     expect(formatNumber(1_500_000_000)).toBe('1.50B')
     expect(formatNumber(7_300_000_000)).toBe('7.30B')
+  })
+})
+
+describe('stripHtml', () => {
+  it('removes tags and collapses whitespace', () => {
+    expect(stripHtml('<p>Hello <strong>world</strong></p>')).toBe('Hello world')
+  })
+
+  it('returns empty string for falsy input', () => {
+    expect(stripHtml('')).toBe('')
+    expect(stripHtml(null)).toBe('')
+  })
+})
+
+describe('getArticleSnippet', () => {
+  it('returns a trimmed plain-text snippet', () => {
+    expect(getArticleSnippet({
+      title: 'Headline',
+      description: '<p>First sentence about the story.</p>',
+    })).toBe('First sentence about the story.')
+  })
+
+  it('skips descriptions that only repeat the title', () => {
+    expect(getArticleSnippet({
+      title: 'Headline',
+      description: 'Headline',
+    })).toBe('')
+  })
+
+  it('strips a leading title prefix from the description', () => {
+    expect(getArticleSnippet({
+      title: 'Headline',
+      description: 'Headline: More detail here.',
+    })).toBe('More detail here.')
+  })
+
+  it('truncates long descriptions', () => {
+    const long = 'a'.repeat(200)
+    expect(getArticleSnippet({ title: 'T', description: long }, 50)).toMatch(/…$/)
+    expect(getArticleSnippet({ title: 'T', description: long }, 50).length).toBe(51)
   })
 })
 

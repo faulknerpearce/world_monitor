@@ -1,6 +1,7 @@
 import { API } from '@config/api'
 import { getGitHubHeaders, createCache } from '@utils/githubUtils'
 import { formatNumber } from '@utils'
+import { fetchWithProxy } from '@utils/fetchUtils'
 
 const cache = createCache(15 * 60 * 1000) // 15-minute TTL
 
@@ -47,18 +48,90 @@ const fetchAvaxValidators = async () => {
   }
 }
 
-const fetchCardanoPools = async () => {
-  console.debug('[validators] Fetching Cardano pools from', API.koiosPoolList)
+const KOIOS_POOL_PAGE_SIZE = 1000
+const KOIOS_MAX_PAGES = 10
+
+/**
+ * Parse Koios PostgREST `Content-Range` (e.g. `0-999/2983`) for the total row count.
+ * @param {string | null} contentRange
+ * @returns {number | null}
+ */
+export const parseKoiosContentRangeTotal = (contentRange) => {
+  if (!contentRange) return null
+  const match = contentRange.match(/\/(\d+)$/)
+  return match ? parseInt(match[1], 10) : null
+}
+
+/**
+ * @param {Array<unknown>} page
+ * @returns {number}
+ */
+export const countKoiosPoolPage = (page) => {
+  if (!Array.isArray(page)) return 0
+  return page.length
+}
+
+const buildKoiosPoolUrl = (base, offset = 0) => (
+  offset > 0 ? `${base}&limit=${KOIOS_POOL_PAGE_SIZE}&offset=${offset}` : base
+)
+
+const parseKoiosPoolPage = (data) => {
+  if (!Array.isArray(data)) {
+    throw new Error('Unexpected Koios response')
+  }
+  return countKoiosPoolPage(data)
+}
+
+const fetchKoiosRegisteredPoolPage = async (offset = 0) => {
+  const proxiedUrl = buildKoiosPoolUrl(API.koiosRegisteredPools, offset)
+
   try {
-    const data = await safeFetch(API.koiosPoolList)
-    console.debug('[validators] Cardano raw response sample:', Array.isArray(data) ? data.slice(0, 2) : data)
-    if (!Array.isArray(data)) {
-      console.warn('[validators] Cardano: expected array, got:', typeof data)
-      return null
+    const res = await fetch(proxiedUrl, {
+      headers: {
+        Accept: 'application/json',
+        Prefer: 'count=exact',
+      },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status} - ${proxiedUrl}`)
+
+    const data = await res.json()
+    return {
+      pageCount: parseKoiosPoolPage(data),
+      total: parseKoiosContentRangeTotal(res.headers.get('content-range')),
     }
-    const active = data.filter(p => p.pool_status === 'active')
-    console.debug('[validators] Cardano active pools:', active.length, '/ total:', data.length)
-    return active.length
+  } catch (proxyErr) {
+    const directUrl = buildKoiosPoolUrl(API.koiosRegisteredPoolsDirect, offset)
+    console.debug('[validators] Koios proxy fetch failed, using CORS proxy:', proxyErr.message)
+    const text = await fetchWithProxy(directUrl)
+    const data = JSON.parse(text)
+    return {
+      pageCount: parseKoiosPoolPage(data),
+      total: null,
+    }
+  }
+}
+
+const fetchCardanoPools = async () => {
+  console.debug('[validators] Fetching Cardano stake pools from', API.koiosRegisteredPools)
+  try {
+    const firstPage = await fetchKoiosRegisteredPoolPage(0)
+    if (firstPage.total != null) {
+      console.debug('[validators] Cardano registered stake pools:', firstPage.total)
+      return firstPage.total
+    }
+
+    let total = firstPage.pageCount
+    for (let page = 1; page < KOIOS_MAX_PAGES; page += 1) {
+      const offset = page * KOIOS_POOL_PAGE_SIZE
+      const { pageCount } = await fetchKoiosRegisteredPoolPage(offset)
+      if (pageCount === 0) break
+      total += pageCount
+      console.debug('[validators] Cardano stake pools page', page + 1, ':', pageCount)
+      if (pageCount < KOIOS_POOL_PAGE_SIZE) break
+    }
+
+    console.debug('[validators] Cardano registered stake pools:', total)
+    return total > 0 ? total : null
   } catch (err) {
     console.error('[validators] Cardano fetch failed:', err.message)
     throw err

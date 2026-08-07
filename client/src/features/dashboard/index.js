@@ -1,4 +1,5 @@
 export { default as Dashboard } from './Dashboard'
+export { default as DashboardOverview } from './DashboardOverview'
 export { default as Panel } from './Panel'
 export { default as ErrorBoundary } from './ErrorBoundary'
 export { default as CategoryTabs } from './CategoryTabs'

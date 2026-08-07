@@ -17,15 +17,15 @@ const LayoffsPanel = () => {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex justify-between items-center py-2.5 px-4 bg-[rgba(239,68,68,0.05)] border-b border-[rgba(239,68,68,0.1)] shrink-0">
-                <span className="flex flex-col items-center">
-                    <span className="text-[0.65rem] text-text-dim uppercase">{t('layoffs.totalAffected')}</span>
-                    <span className="text-lg font-bold !text-[var(--red)]">—</span>
-                </span>
-                <span className="flex flex-col items-center">
-                    <span className="text-[0.65rem] text-text-dim uppercase">{t('layoffs.events')}</span>
-                    <span className="text-lg font-bold">{news.length}</span>
-                </span>
+            <div className="flex gap-6 py-2 px-4 border-b border-section-border shrink-0">
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[0.65rem] text-text-dim">{t('layoffs.totalAffected')}</span>
+                    <span className="text-sm font-semibold !text-[var(--red)] font-[family-name:var(--font-mono)]">—</span>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[0.65rem] text-text-dim">{t('layoffs.events')}</span>
+                    <span className="text-sm font-semibold font-[family-name:var(--font-mono)]">{news.length}</span>
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto flex flex-col p-4">

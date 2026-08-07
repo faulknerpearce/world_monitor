@@ -42,6 +42,7 @@
         /* Panel surfaces (solid — no glass blur) */
         --glass-bg: #161b22;
         --glass-border: #1e2836;
+        --section-border: var(--glass-border);
         --glass-blur: 0px;
         --panel-border: 1px solid #1e2836;
         --panel-border-top: 1px solid #2a3544;
@@ -115,9 +116,33 @@
 }
 
 @layer components {
+    /* ===== Subtle section borders (dashboard page sections) ===== */
+    .section-border {
+        border: 1px solid var(--section-border);
+    }
+
+    .section-divider {
+        border-bottom: 1px solid var(--section-border);
+    }
+
     /* ===== Shared feed item card (used by Layoffs, Startups, VC, AI Race, War Watch) ===== */
     .panel-feed-item {
-        @apply flex flex-col p-3.5 mb-3 bg-panel-item-bg border border-border-glass rounded-lg no-underline transition-all duration-200 hover:bg-panel-item-hover hover:border-border-glass-hover hover:-translate-y-0.5 shadow-sm hover:shadow-md;
+        @apply flex flex-col p-3 mb-2 bg-panel-item-bg rounded-md no-underline transition-colors duration-200 hover:bg-panel-item-hover;
+        color: var(--text-primary);
+    }
+
+    .panel-feed-item:hover,
+    .panel-feed-item:focus-visible,
+    .panel-feed-item:visited {
+        color: var(--text-primary);
+    }
+
+    /* Headlines stay theme text in both default and hover states */
+    .feed-headline,
+    .feed-headline:hover,
+    .panel-feed-item:hover .feed-headline,
+    .news-item:hover .feed-headline {
+        color: var(--text-primary);
     }
 
     /* ===== Ticker pause control ===== */
@@ -137,30 +162,16 @@
     .panel:nth-child(11) { animation-delay: 0.55s; }
     .panel:nth-child(12) { animation-delay: 0.60s; }
 
-    /* ===== Hero panels height override ===== */
-    .hero-featured .panel {
-        height: 400px !important;
+    /* ===== Dashboard bento grid ===== */
+    .dashboard-grid .panel {
+        min-height: 360px;
+        max-height: 480px;
     }
 
-    /* ===== Unified panel heights for all panels ===== */
-    .panel,
-    .hero-featured .panel,
-    .news-grid .panel[data-panel="startups"],
-    .news-grid .panel[data-panel="vc"],
-    .news-grid .panel[data-panel="layoffs"],
-    .news-grid .panel {
-        height: 400px !important;
-    }
-
-    /* ===== Mobile responsive panel heights ===== */
     @media (max-width: 768px) {
-        .hero-featured .panel,
-        .news-grid .panel[data-panel="startups"],
-        .news-grid .panel[data-panel="vc"],
-        .news-grid .panel[data-panel="layoffs"],
-        .news-grid .panel,
-        .panel {
-            height: 320px !important;
+        .dashboard-grid .panel {
+            min-height: 300px;
+            max-height: 400px;
         }
     }
 
@@ -386,10 +397,16 @@
     }
 
     /* ===== Ticker type accents ===== */
-    .ticker-item.index .ticker-name { color: var(--indigo); }
-    .ticker-item.crypto .ticker-name { color: #fbbf24; }
-    .ticker-item.sector .ticker-name { color: #a78bfa; }
-    .ticker-item.commodity .ticker-name { color: #34d399; }
+    .ticker-item.index .ticker-symbol { color: var(--indigo); }
+    .ticker-item.index .ticker-name { color: var(--text-secondary); }
+    .ticker-item.crypto .ticker-symbol { color: #fbbf24; }
+    .ticker-item.crypto .ticker-name { color: var(--text-secondary); }
+    .ticker-item.sector .ticker-symbol { color: #a78bfa; }
+    .ticker-item.sector .ticker-name { color: var(--text-secondary); }
+    .ticker-item.commodity .ticker-symbol { color: #34d399; }
+    .ticker-item.commodity .ticker-name { color: var(--text-secondary); }
+    .ticker-item.stock .ticker-symbol { color: var(--accent); }
+    .ticker-item.stock .ticker-name { color: var(--text-secondary); }
 
     /* ===== Heatmap cell colors ===== */
     .heatmap-cell.up-3 { background: #0d5a2d; color: #fff; }
@@ -494,9 +511,8 @@
     }
 
     /* Grid gap adjustments - smaller on mobile */
-    .news-grid {
+    .dashboard-grid {
         gap: 12px !important;
-        padding: 12px !important;
     }
 
     /* Hero section gap */
@@ -549,11 +565,7 @@
         padding-bottom: 12px !important;
     }
 
-    /* Unified panel height */
-    .panel,
-    .hero-featured .panel {
-        height: 300px !important;
-    }
+
 
     /* Base font size */
     body {
@@ -561,9 +573,8 @@
     }
 
     /* Grid even smaller */
-    .news-grid {
+    .dashboard-grid {
         gap: 8px !important;
-        padding: 8px !important;
     }
 
     /* Category tabs - stack on small screens */
@@ -588,6 +599,7 @@
     .animate-pulse-slow,
     .animate-pulse,
     .animate-ticker-scroll,
+    .animate-ticker-scroll-slow,
     .animate-ticker-scroll-reverse,
     .animate-spin,
     .animate-shimmer {

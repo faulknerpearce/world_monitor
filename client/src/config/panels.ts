@@ -1,22 +1,24 @@
 type PanelCategory = 'all' | 'news' | 'markets' | 'crypto' | 'tech' | 'data'
+type PanelLayout = 'wide' | 'normal'
 
 interface PanelConfig {
   nameKey: string
   priority: number
   draggable: boolean
   category: PanelCategory
+  layout: PanelLayout
 }
 
 export const PANELS: Record<string, PanelConfig> = {
-  map: { nameKey: 'panels.map', priority: 1, draggable: false, category: 'all' },
-  politics: { nameKey: 'panels.politics', priority: 1, draggable: true, category: 'news' },
-  tech: { nameKey: 'panels.tech', priority: 1, draggable: true, category: 'tech' },
-  finance: { nameKey: 'panels.finance', priority: 1, draggable: true, category: 'markets' },
-  startups: { nameKey: 'panels.startups', priority: 1, draggable: true, category: 'tech' },
-  vc: { nameKey: 'panels.vc', priority: 1, draggable: true, category: 'markets' },
-  blockchain: { nameKey: 'panels.blockchain', priority: 1, draggable: true, category: 'crypto' },
-  warwatch: { nameKey: 'panels.warwatch', priority: 1, draggable: true, category: 'news' },
-  layoffs: { nameKey: 'panels.layoffs', priority: 3, draggable: true, category: 'data' },
+  map: { nameKey: 'panels.map', priority: 1, draggable: false, category: 'all', layout: 'normal' },
+  politics: { nameKey: 'panels.politics', priority: 1, draggable: true, category: 'news', layout: 'wide' },
+  tech: { nameKey: 'panels.tech', priority: 1, draggable: true, category: 'tech', layout: 'normal' },
+  finance: { nameKey: 'panels.finance', priority: 1, draggable: true, category: 'markets', layout: 'normal' },
+  startups: { nameKey: 'panels.startups', priority: 1, draggable: true, category: 'tech', layout: 'wide' },
+  vc: { nameKey: 'panels.vc', priority: 1, draggable: true, category: 'markets', layout: 'normal' },
+  blockchain: { nameKey: 'panels.blockchain', priority: 1, draggable: true, category: 'crypto', layout: 'normal' },
+  warwatch: { nameKey: 'panels.warwatch', priority: 1, draggable: true, category: 'news', layout: 'normal' },
+  layoffs: { nameKey: 'panels.layoffs', priority: 3, draggable: true, category: 'data', layout: 'normal' },
 }
 
 interface CategoryConfig {

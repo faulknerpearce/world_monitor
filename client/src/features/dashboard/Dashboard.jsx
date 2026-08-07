@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import { Panel, ErrorBoundary, CategoryTabs } from '@features/dashboard'
+import { Panel, ErrorBoundary, CategoryTabs, DashboardOverview } from '@features/dashboard'
 import { NewsPanel } from '@features/news'
 import { StartupsPanel } from '@features/startups'
 import { VCPanel } from '@features/vc-activity'
@@ -8,11 +8,9 @@ import { WarWatchPanel } from '@features/war-watch'
 import { LayoffsPanel } from '@features/layoffs'
 import { DeveloperActivity } from '@features/developer-activity'
 import { TickerStrip } from '@features/markets'
-import { PANELS, COMMAND_MODES } from '@config/panels'
+import { PANELS, COMMAND_MODES, CATEGORIES } from '@config/panels'
 import { NEWS_FEEDS } from '@features/news/feedConfig'
 import { useI18n } from '@context/I18nContext'
-
-// No hero panels - all rendered in unified grid
 
 const Dashboard = ({ panelSettings, currentMode }) => {
   const { t } = useI18n()
@@ -62,9 +60,6 @@ const Dashboard = ({ panelSettings, currentMode }) => {
     })
   }, [draggedPanel])
 
-  // Pre-bind drag handlers per panel id. Without this, every render creates
-  // new arrow functions for `onDragStart`/`onDrop`, defeating React.memo on
-  // <Panel>. Recomputed only when the panel order or any handler changes.
   const dragHandlers = useMemo(() => {
     const map = {}
     for (const id of panelOrder) {
@@ -78,27 +73,20 @@ const Dashboard = ({ panelSettings, currentMode }) => {
 
   const enabledPanels = panelOrder.filter(id => panelSettings[id] !== false)
 
-  // Get panels for current command mode
   const modePanels = currentMode && COMMAND_MODES[currentMode]
     ? COMMAND_MODES[currentMode].panels
     : null
 
-  // Filter panels by command mode first, then by category
   const filteredPanels = enabledPanels.filter(id => {
     const panelConfig = PANELS[id]
     if (!panelConfig) return false
-    
-    // If in a command mode, only show mode-specific panels
+
     if (modePanels && !modePanels.includes(id)) return false
-    
+
     if (activeCategory === 'all') return true
     return panelConfig.category === activeCategory
   })
 
-  // Memoize panel content by id so that during a drag (which mutates
-  // `draggedPanel` state and re-renders the parent) the JSX for unchanged
-  // panels keeps a stable reference, letting React.memo on each <Panel>
-  // skip re-renders.
   const panelContent = useMemo(() => ({
     politics: <NewsPanel feeds={NEWS_FEEDS.politics} panelId="politics" />,
     tech: <NewsPanel feeds={NEWS_FEEDS.tech} panelId="tech" />,
@@ -116,28 +104,36 @@ const Dashboard = ({ panelSettings, currentMode }) => {
     </div>
   )
 
+  const activeCategoryLabel = CATEGORIES.find(c => c.id === activeCategory)
+
   return (
     <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-hidden bg-bg-dark">
-      {/* Ticker strip for markets and sectors */}
       <div className="w-full shrink-0">
         <ErrorBoundary>
-          <TickerStrip />
+          <TickerStrip variant="compact" />
         </ErrorBoundary>
       </div>
 
-      {/* Main scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 max-[1400px]:px-4 max-[1400px]:py-4 max-[1000px]:px-4 max-[1000px]:py-4 max-[768px]:px-3 max-[768px]:py-3 max-[768px]:pt-4">
-        {/* Category Tabs */}
-        <div className="mb-6 max-[1400px]:mb-4 max-[1000px]:mb-4 max-[768px]:mb-3">
-          <CategoryTabs
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-          />
-        </div>
+      <ErrorBoundary>
+        <DashboardOverview
+          panelCount={filteredPanels.length}
+          currentMode={currentMode}
+        />
+      </ErrorBoundary>
 
+      <div className="flex-1 overflow-y-auto px-6 py-5 max-[1400px]:px-4 max-[1400px]:py-4 max-[1000px]:px-4 max-[1000px]:py-4 max-[768px]:px-3 max-[768px]:py-3">
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+        />
 
-        {/* Filtered panels grid - 3 columns */}
-        <div className="news-grid grid grid-cols-3 gap-6 flex-1 overflow-y-auto content-start max-[1400px]:grid-cols-2 max-[1000px]:grid-cols-2 max-[1000px]:gap-4 max-[768px]:grid-cols-1 max-[768px]:gap-3">
+        {activeCategory !== 'all' && activeCategoryLabel && (
+          <p className="text-[0.75rem] text-text-dim mt-3 mb-1">
+            {t('dashboard.filteringBy', { category: t(activeCategoryLabel.nameKey) })}
+          </p>
+        )}
+
+        <div className="dashboard-grid grid grid-cols-3 gap-5 content-start mt-4 max-[1400px]:grid-cols-2 max-[1000px]:gap-4 max-[768px]:grid-cols-1 max-[768px]:gap-3">
           {filteredPanels.map(panelId => {
             const config = PANELS[panelId]
             if (!config) return null
@@ -148,7 +144,7 @@ const Dashboard = ({ panelSettings, currentMode }) => {
                 id={panelId}
                 title={t(config.nameKey)}
                 draggable={config.draggable}
-                isWide={false}
+                isWide={config.layout === 'wide'}
                 onDragStart={dragHandlers[panelId]?.onDragStart}
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
@@ -162,7 +158,6 @@ const Dashboard = ({ panelSettings, currentMode }) => {
           })}
         </div>
 
-        {/* Developer Activity Section */}
         <ErrorBoundary>
           <DeveloperActivity />
         </ErrorBoundary>

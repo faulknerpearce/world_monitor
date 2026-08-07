@@ -197,7 +197,7 @@ const ChainCard = ({ chainKey, stats, t, locale }) => {
     const validatorLabel = chainStats?.validatorLabel ?? t('developer.validators')
 
     return (
-        <div className="bg-bg-panel border border-border-main rounded-lg p-5 flex flex-col gap-4">
+        <div className="bg-bg-panel section-border rounded-lg p-5 flex flex-col gap-4">
             <div className="mb-2">
                 <h3 className="text-[0.85rem] font-bold uppercase tracking-[0.05em]" style={{ color: displayConfig.color }}>
                     {displayConfig.name}
@@ -205,7 +205,7 @@ const ChainCard = ({ chainKey, stats, t, locale }) => {
             </div>
 
             {/* Metrics row */}
-            <div className="grid grid-cols-3 gap-2 p-3 bg-panel-item-bg rounded-md border border-border-glass">
+            <div className="grid grid-cols-3 gap-2 p-3 bg-panel-item-bg rounded-md">
                 <div className="flex flex-row items-center justify-center gap-1.5">
                     <span className="text-[0.55rem] text-text-dim uppercase tracking-[0.05em]">{t('developer.totalCommits')}</span>
                     <span className="text-[0.9rem] font-bold font-[family-name:var(--font-mono)]" style={{ color: displayConfig.color }}>
@@ -279,8 +279,8 @@ const ChainActivity = () => {
     }, [])
 
     return (
-        <section className="mt-8 pt-6 border-t border-border-main" aria-labelledby="developer-activity-heading">
-            <h2 id="developer-activity-heading" className="text-[0.65rem] font-bold text-text-dim uppercase tracking-[0.05em] mb-4">
+        <section className="mt-8 pt-6 border-t border-section-border" aria-labelledby="developer-activity-heading">
+            <h2 id="developer-activity-heading" className="text-sm font-semibold text-text-secondary mb-4">
                 {t('developer.title')}
             </h2>
             <div className="grid grid-cols-3 gap-6 max-[1400px]:grid-cols-2 max-[1000px]:grid-cols-1 max-[1000px]:gap-4">
